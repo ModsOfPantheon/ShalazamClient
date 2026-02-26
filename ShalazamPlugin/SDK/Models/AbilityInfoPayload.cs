@@ -1,0 +1,81 @@
+using ShalazamPlugin.Extensions;
+
+namespace ShalazamPlugin.SDK.Models;
+
+public class AbilityInfoPayload
+{
+    public float Cooldown { get; set; }
+    public string? Description { get; set; }
+    public string DisplayName { get; set; }
+    public string AbilityType { get; set; }
+    public bool TriggerGlobalCooldown { get; set; }
+    public string AbilitySchool { get; set; }
+    public string ActionType { get; set; }
+    public bool AffectedByGlobalCooldown { get; set; }
+    public bool AllowManyOfDifferentTiers { get; set; }
+    public bool AllowManyOfSameTier { get; set; }
+    public bool CastableWhileHardCCd { get; set; }
+    public bool CastableWhileSilenced { get; set; }
+    public float CastTime { get; set; }
+    public int CastTypeBasedBuffId { get; set; }
+    public bool CharmUsable { get; set; }
+    public float? MinRange { get; set; }
+    public float? MaxRange { get; set; }
+    public int? MinLevel { get; set; }
+    public int? MaxLevel { get; set; }
+    public bool RequiresLineOfSight { get; set; }
+    public string? RequiresEntityKind { get; set; }
+    public int Id { get; set; }
+    public string DesignerId { get; set; }
+    public string LoweredDesignerId { get; set; }
+    public string LoweredDisplayName { get; set; }
+    public string IconName { get; set; }
+    public bool IsCombo { get; set; }
+    public int[] ComboAbilities { get; set; }
+    public AbilityCostData[] Costs { get; set; }
+    public string FinishSoundType { get; set; }
+    public float GlobalCooldownMultiplier { get; set; }
+    public string CastType { get; set; }
+    public int CooldownOverrideGroup { get; set; }
+    public string GroundTargetModel { get; set; }
+    public float GroundTargetRadius { get; set; }
+    public string HasteAffectType { get; set; }
+    public bool HideCastBarDuringCast { get; set; }
+    public bool HideForPets { get; set; }
+    public bool IgnoreCastTimeMultipliers { get; set; }
+    public string ImpactSoundType { get; set; }
+    public bool RequiresFacingTarget { get; set; }
+    public bool TargetMustBeAlive { get; set; }
+    public int? MinimumPrimaryWeaponSkill { get; set; }
+    public int? MinimumSecondaryWeaponSkill { get; set; }
+    public string[] RequiresTargetMissingStatuses { get; set; }
+    public int[] RequiresTargetMissingBuffs { get; set; }
+    public string[] RequiresCasterMissingStatuses { get; set; }
+    public bool RequiresTargetIsRezablePlayerCorpse { get; set; }
+    public string LeftHandEffect { get; set; }
+    public int LogicalGraphId { get; set; }
+    public string LoopSoundType { get; set; }
+    public int OverridePriority { get; set; }
+    public int PassiveBuffAlwaysApplied { get; set; }
+    public int PassiveBuffAppliedWhileOffCooldown { get; set; }
+    public bool PrimaryWeaponBasedActionType { get; set; }
+    public bool RangedBasedActionType { get; set; }
+    public bool RequireMemorizeToCast { get; set; }
+    public string RightHandEffect { get; set; }
+    public bool SecondaryWeaponBasedActionType { get; set; }
+    public string SpellType { get; set; }
+    public string TargetType { get; set; }
+    public bool UseAllReadiness { get; set; }
+    public ulong Version { get; set; }
+    public float? MeleeMaxRange { get; set; }
+    public bool RequiresTargetInCombat { get; set; }
+    public bool RequiresTargetNotInCombat { get; set; }
+    public bool RequiresCasterInCombat { get; set; }
+    public bool RequiresCasterNotInCombat { get; set; }
+    public int? MaxLevelGapBetweenCasterAndTarget { get; set; }
+    public AbilityPoolBetweenConditionData? RequiresPoolWithinRange { get; set; }
+    public bool RequiresTargetIsAPet { get; set; }
+    public int[] MasteryAbilities { get; set; }
+    public int? BaseAbilityId { get; set; }
+    public string ClassName { get; set; }
+}
