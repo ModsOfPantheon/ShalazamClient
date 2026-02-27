@@ -1,5 +1,8 @@
-﻿using MelonLoader;
+﻿using Il2Cpp;
+using Il2CppPantheonPersist;
+using MelonLoader;
 using ShalazamPlugin.SDK;
+using UnityEngine;
 
 namespace ShalazamPlugin;
 
@@ -11,6 +14,7 @@ public class ModMain : MelonMod
     {
         var category = MelonPreferences.CreateCategory("ShalazamApi");
         var apiKey = category.CreateEntry<string>("ApiKey", "");
+        Globals.MinimumTrackingDistance = category.CreateEntry("MinimumTrackingDistance", 3f).Value;
 
         category.SaveToFile(false);
         
@@ -24,5 +28,44 @@ public class ModMain : MelonMod
     {
     }
 
-    public const string PluginVersion = "2.1.0";
+    public override void OnUpdate()
+    {
+        if (Globals.TrackedOffensiveEntity == null)
+        {
+            return;
+        }
+
+        var currentTargetPos = Globals.TrackedOffensiveEntity.transform.position;
+        
+        if (Globals._lastPosition == null)
+        {
+            Globals._lastPosition = Globals.TrackedOffensiveEntity.transform.position;
+            ShalazamClient.PostMonster(Globals.TrackedOffensiveEntity);
+
+            return;
+        }
+
+        if (Vector3.Distance(currentTargetPos, Globals._lastPosition.Value) > Globals.MinimumTrackingDistance)
+        {
+            ShalazamClient.PostMonster(Globals.TrackedOffensiveEntity);
+            Globals._lastPosition = currentTargetPos;
+        }
+    }
+    
+    public static void TrackOffensiveTarget()
+    {
+        if (Globals.LocalPlayer == null)
+        {
+            return;
+        }
+
+        var offensiveTarget = Globals.LocalPlayer.Targets.Offensive;
+        if (offensiveTarget != null)
+        {
+            Globals.TrackedOffensiveEntity = offensiveTarget.TryCast<EntityNpcGameObject>();
+            Globals._lastPosition = null;
+        }
+    }
+
+    public const string PluginVersion = "2.2.0";
 }
