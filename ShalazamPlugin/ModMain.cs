@@ -52,7 +52,7 @@ public class ModMain : MelonMod
         }
     }
 
-    public const string PluginVersion = "2.1.0";
+    public const string PluginVersion = "2.2.0";
 
     public static void TrackOffensiveTarget()
     {
