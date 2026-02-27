@@ -51,9 +51,7 @@ public class ModMain : MelonMod
             Globals._lastPosition = currentTargetPos;
         }
     }
-
-    public const string PluginVersion = "2.2.0";
-
+    
     public static void TrackOffensiveTarget()
     {
         if (Globals.LocalPlayer == null)
@@ -68,4 +66,6 @@ public class ModMain : MelonMod
             Globals._lastPosition = null;
         }
     }
+
+    public const string PluginVersion = "2.2.0";
 }
