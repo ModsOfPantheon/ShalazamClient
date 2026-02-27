@@ -1,4 +1,5 @@
-﻿using MelonLoader;
+﻿using Il2Cpp;
+using MelonLoader;
 using ShalazamPlugin.SDK;
 
 namespace ShalazamPlugin;
@@ -25,4 +26,19 @@ public class ModMain : MelonMod
     }
 
     public const string PluginVersion = "2.1.0";
+
+    public static void TrackOffensiveTarget()
+    {
+        if (Globals.LocalPlayer == null)
+        {
+            return;
+        }
+
+        var offensiveTarget = Globals.LocalPlayer.Targets.Offensive;
+        if (offensiveTarget != null)
+        {
+            Globals.TrackedOffensiveEntity = offensiveTarget.TryCast<EntityNpcGameObject>();
+            Globals._lastPosition = null;
+        }
+    }
 }
