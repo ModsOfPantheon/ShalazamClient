@@ -3,6 +3,7 @@ using Il2CppPantheonPersist;
 using MelonLoader;
 using ShalazamPlugin.SDK;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace ShalazamPlugin;
 
@@ -64,7 +65,22 @@ public class ModMain : MelonMod
         {
             Globals.TrackedOffensiveEntity = offensiveTarget.TryCast<EntityNpcGameObject>();
             Globals._lastPosition = null;
+            
+            UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
         }
+    }
+
+    public static void StopTrackingOffensiveTarget()
+    {
+        if (Globals.TrackedOffensiveEntity == null)
+        {
+            return;
+        }
+        
+        Globals.TrackedOffensiveEntity = null;
+        Globals._lastPosition = null;
+        
+        UIChatWindows.Instance.PassMessage("Stopped tracking offensive target", ChatChannelType.Info);
     }
 
     public const string PluginVersion = "2.2.0";

@@ -14,9 +14,9 @@ public class TargetHooks
             return;
         }
 
-        if (__instance.Offensive == null)
+        if (__instance.Offensive == null || __instance.Offensive.NetworkId.Value != Globals.TrackedOffensiveEntity?.NetworkId.Value)
         {
-            Globals.TrackedOffensiveEntity = null;
+            ModMain.StopTrackingOffensiveTarget();
         }
     }
 }
