@@ -61,13 +61,28 @@ public class ModMain : MelonMod
         }
 
         var offensiveTarget = Globals.LocalPlayer.Targets.Offensive;
-        if (offensiveTarget != null)
+        if (offensiveTarget == null)
         {
-            Globals.TrackedOffensiveEntity = offensiveTarget.TryCast<EntityNpcGameObject>();
-            Globals._lastPosition = null;
-            
-            UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
+            return;
         }
+
+        var targetEntity = offensiveTarget.TryCast<EntityNpcGameObject>();
+
+        if (targetEntity == null)
+        {
+            return;
+        }
+
+        if (targetEntity.Profession != NpcProfession.None)
+        {
+            UIChatWindows.Instance.PassMessage($"Can't track {targetEntity.info.DisplayName} because they are not a monster", ChatChannelType.Info);
+            return;
+        }
+        
+        Globals.TrackedOffensiveEntity = targetEntity;
+        Globals._lastPosition = null;
+            
+        UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
     }
 
     public static void StopTrackingOffensiveTarget()
