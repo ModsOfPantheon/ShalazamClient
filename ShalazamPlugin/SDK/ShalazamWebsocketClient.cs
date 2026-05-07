@@ -121,9 +121,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             Type = "drop"
         };
         
-        MelonLogger.Msg(JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
-        
-        //PostRequest(payload);
+        PostRequest(payload);
     }
 
     private Task OnMessageReceived(string body)
