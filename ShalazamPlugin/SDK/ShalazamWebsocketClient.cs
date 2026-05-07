@@ -6,6 +6,7 @@ using System.Text.Json.Serialization;
 using Il2Cpp;
 using MelonLoader;
 using ShalazamPlugin.Extensions;
+using ShalazamPlugin.SDK.Models;
 using ShalazamPlugin.SDK.Models.Websockets;
 
 namespace ShalazamPlugin.SDK;
@@ -96,6 +97,33 @@ public class ShalazamWebsocketClient : IShalazamClient
         }
         
         PostRequest(ability.ToRequestPayload());
+    }
+
+    public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
+    {
+        if (!_roles.Contains(Permissions.CreateMonster))
+        {
+            return;
+        }
+
+        var payload = new DropPayload
+        {
+            Drop = new DropBody
+            {
+                MonsterName = entityNpcGameObject.info.DisplayName,
+                Source = isSkinning ? "skinning" : "kill",
+                Items = itemsDropped.Select(x => new ItemDrop
+                {
+                    Id = x.Template.ItemId,
+                    Name = x.Template.ItemName
+                })
+            },
+            Type = "drop"
+        };
+        
+        MelonLogger.Msg(JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull }));
+        
+        //PostRequest(payload);
     }
 
     private Task OnMessageReceived(string body)
