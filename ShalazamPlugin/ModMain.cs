@@ -98,5 +98,5 @@ public class ModMain : MelonMod
         UIChatWindows.Instance.PassMessage("Stopped tracking offensive target", ChatChannelType.Info);
     }
 
-    public const string PluginVersion = "2.2.0";
+    public const string PluginVersion = "2.3.0";
 }

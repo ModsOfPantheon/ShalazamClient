@@ -162,5 +162,7 @@ public static class EntityManager
     public static void OnNpcRemoved(EntityNpcGameObject entityNpcGameObject)
     {
         Monsters.Remove(entityNpcGameObject);
+        
+        LootCache.OnNpcDeleted(entityNpcGameObject);
     }
 }
