@@ -6,6 +6,7 @@ namespace ShalazamPlugin;
 
 public class Globals
 {
+    public static bool IsPTR = false;
     public static bool HasSetUpUI = false;
     public static EntityPlayerGameObject? LocalPlayer = null;
     public static EntityNpcGameObject? TrackedOffensiveEntity = null;
