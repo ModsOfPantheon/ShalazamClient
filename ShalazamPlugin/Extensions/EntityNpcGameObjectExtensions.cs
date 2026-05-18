@@ -1,4 +1,5 @@
 using Il2Cpp;
+using Il2CppPantheonPersist;
 using ShalazamPlugin.SDK.Models.Websockets;
 
 namespace ShalazamPlugin.Extensions;
@@ -20,7 +21,8 @@ public static class EntityNpcGameObjectExtensions
                 LocX = MathF.Round(entityNpcGameObject.transform.position.x, 2),
                 LocY = MathF.Round(entityNpcGameObject.transform.position.y, 2),
                 LocZ = MathF.Round(entityNpcGameObject.transform.position.z, 2),
-                Difficulty = GetDifficultyLabelForTier(entityNpcGameObject.info.Tier)
+                Difficulty = GetDifficultyLabelForTier(entityNpcGameObject.info.Tier),
+                MaxHp = (int)entityNpcGameObject.Pools.GetPool(PoolType.Health).Max
             }
         };
     }
