@@ -153,6 +153,8 @@ public class ShalazamWebsocketClient : IShalazamClient
     
     private void PostRequest<T>(T payload) where T : WebsocketPayload
     {
+        payload.IsTestRealm = Globals.IsPTR;
+        
         if (_ws.State != WebSocketState.Open)
         {
             MelonLogger.Warning("Websocket is not connected. Dropping request.");

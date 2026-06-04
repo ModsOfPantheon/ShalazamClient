@@ -15,4 +15,5 @@ public class MonsterBody
     public int Level { get; set; }
     public int Hour { get; set; }
     public string Zone { get; set; }
+    public int MaxHp { get; set; }
 }
