@@ -4,15 +4,16 @@
       <TargetFramework>net6.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
-      <PantheonInstallDir Condition="'$(PantheonInstallDir)' == '' and Exists('C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen')">C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen</PantheonInstallDir>
-      <PantheonInstallDir Condition="'$(PantheonInstallDir)' == ''">$(UserProfile)\Documents\My Games\Pantheon\App</PantheonInstallDir>
-      <MelonLoaderDir>$(PantheonInstallDir)\MelonLoader</MelonLoaderDir>
-      <PantheonModsDir>$(PantheonInstallDir)\Mods</PantheonModsDir>
+      <!-- Default Steam paths. Override GamePath in Directory.Build.props for non-standard installs. -->
+      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen (PTR)')">C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)')">C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GamePath Condition="'$(GamePath)' == '' And Exists('D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)')">D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GameLibs>$(GamePath)\MelonLoader</GameLibs>
     </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="$(MelonLoaderDir)\net6\*.dll" />
-    <Reference Include="$(MelonLoaderDir)\Il2CppAssemblies\*.dll" />
+    <Reference Include="$(GameLibs)\net6\*.dll" />
+    <Reference Include="$(GameLibs)\Il2CppAssemblies\*.dll" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
