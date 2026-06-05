@@ -18,8 +18,6 @@ public class LoginClientOnConnectedToWorldHook
             if (server.ServerAddress.StartsWith(serverIp.ToString(), StringComparison.OrdinalIgnoreCase))
             {
                 Globals.IsPTR = server.ServerName.Contains("(Test Realm)");
-                
-                MelonLogger.Msg($"Is this PTR? {Globals.IsPTR}");
             }
         }
     }
