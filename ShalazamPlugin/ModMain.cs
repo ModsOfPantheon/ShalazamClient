@@ -81,7 +81,7 @@ public class ModMain : MelonMod
         
         Globals.TrackedOffensiveEntity = targetEntity;
         Globals._lastPosition = null;
-            
+        
         UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
     }
 

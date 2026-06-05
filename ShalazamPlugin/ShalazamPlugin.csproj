@@ -5,9 +5,9 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>enable</Nullable>
       <!-- Default Steam paths. Override GamePath in Directory.Build.props for non-standard installs. -->
-      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen (PTR)')">C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
-      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)')">C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
-      <GamePath Condition="'$(GamePath)' == '' And Exists('D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)')">D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen')">C:\Program Files (x86)\Steam\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GamePath Condition="'$(GamePath)' == '' And Exists('C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen')">C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
+      <GamePath Condition="'$(GamePath)' == '' And Exists('D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen')">D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
       <GameLibs>$(GamePath)\MelonLoader</GameLibs>
     </PropertyGroup>
 
