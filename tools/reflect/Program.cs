@@ -116,7 +116,7 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         var memberType = prop.PropertyType;
         var gameType = ResolveGameType(memberType);
 
-        Console.WriteLine($"{indent}{branch}{memberType.Name}  {prop.Name}");
+        Console.WriteLine($"{indent}{branch}{FriendlyTypeName(memberType)}  {prop.Name}");
 
         if (depth < maxDepth && gameType != null && !visited.Contains(gameType.FullName ?? gameType.Name))
             PrintTree(gameType, childIndent, false, depth + 1, visited);
@@ -127,8 +127,8 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         memberIndex++;
         var isLast = memberIndex == allMembers;
         var branch = isLast ? "└── " : "├── ";
-        var parms = string.Join(", ", method.GetParameters().Select(p => $"{p.ParameterType.Name} {p.Name}"));
-        Console.WriteLine($"{indent}{branch}{method.ReturnType.Name}  {method.Name}({parms})");
+        var parms = string.Join(", ", method.GetParameters().Select(p => $"{FriendlyTypeName(p.ParameterType)} {p.Name}"));
+        Console.WriteLine($"{indent}{branch}{FriendlyTypeName(method.ReturnType)}  {method.Name}({parms})");
     }
 }
 
@@ -141,6 +141,14 @@ Type? ResolveGameType(Type t)
     if (ns.StartsWith("Il2CppSystem") || ns.StartsWith("Il2CppInterop") || ns.StartsWith("Il2CppMono")) return null;
     allTypes.TryGetValue(t.FullName ?? t.Name, out var resolved);
     return resolved;
+}
+
+string FriendlyTypeName(Type t)
+{
+    if (!t.IsGenericType) return t.Name;
+    var baseName = t.Name[..t.Name.IndexOf('`')];
+    var args = t.GetGenericArguments().Select(FriendlyTypeName);
+    return $"{baseName}<{string.Join(", ", args)}>";
 }
 
 bool IsNoisyMember(string name) => name is
