@@ -99,6 +99,16 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(ability.ToRequestPayload());
     }
 
+    public void PostNpc(EntityNpcGameObject entityNpcGameObject)
+    {
+        if (!_roles.Contains(Permissions.CreateNpc))
+        {
+            return;
+        }
+
+        PostRequest(entityNpcGameObject.ToNpcPayload());
+    }
+
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
     {
         if (!_roles.Contains(Permissions.CreateMonster))
