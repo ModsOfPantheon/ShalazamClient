@@ -146,7 +146,8 @@ Type? ResolveGameType(Type t)
 string FriendlyTypeName(Type t)
 {
     if (!t.IsGenericType) return t.Name;
-    var baseName = t.Name[..t.Name.IndexOf('`')];
+    var backtick = t.Name.IndexOf('`');
+    var baseName = backtick >= 0 ? t.Name[..backtick] : t.Name;
     var args = t.GetGenericArguments().Select(FriendlyTypeName);
     return $"{baseName}<{string.Join(", ", args)}>";
 }
