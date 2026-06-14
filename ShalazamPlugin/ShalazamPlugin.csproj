@@ -9,6 +9,7 @@
       <GamePath Condition="'$(GamePath)' == '' And Exists('C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen')">C:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
       <GamePath Condition="'$(GamePath)' == '' And Exists('D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen')">D:\SteamLibrary\steamapps\common\Pantheon Rise of the Fallen (PTR)</GamePath>
       <GameLibs>$(GamePath)\MelonLoader</GameLibs>
+      <PantheonModsDir>$(GamePath)\Mods</PantheonModsDir>
     </PropertyGroup>
 
   <ItemGroup>
