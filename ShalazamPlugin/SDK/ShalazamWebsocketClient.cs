@@ -142,6 +142,10 @@ public class ShalazamWebsocketClient : IShalazamClient
             hash ^= c;
             hash *= prime;
         }
+        hash ^= 0;
+        hash *= prime;
+        hash ^= 0;
+        hash *= prime;
         return hash;
     }
 
