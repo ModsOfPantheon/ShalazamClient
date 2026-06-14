@@ -9,4 +9,5 @@ public static class Permissions
     public const string CreateResource = "resource-create";
     public const string CreateItem = "item-create";
     public const string CreateAbility = "ability-create";
+    public const string CreateNpc = "npc-create";
 }

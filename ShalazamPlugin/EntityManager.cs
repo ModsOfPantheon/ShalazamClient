@@ -8,7 +8,7 @@ public static class EntityManager
 {
     private static readonly string[] Blacklist = { "Banner of Arms", "Banner of Onslaught", "Challenger's Banner", "Rallying Banner", "Shieldman's Banner", "ghostly riddler" };
     private static string? _apiKey;
-    
+
     private static readonly List<EntityPlayerGameObject> Players = new();
     private static readonly List<NetworkWorldItem> WorldItems = new();
     private static readonly List<EntityNpcGameObject> Monsters = new();
@@ -22,7 +22,7 @@ public static class EntityManager
         {
             MelonLogger.Error("You need to set your configuration key in the config file");
         }
-        
+
         _apiKey = apiKey;
     }
 
@@ -32,14 +32,14 @@ public static class EntityManager
         {
             return;
         }
-        
+
         Players.Add(entityPlayerGameObject);
 
         if (entityPlayerGameObject != Globals.LocalPlayer)
         {
             return;
         }
-        
+
         if (ModMain.ShalazamClient.Username != null)
         {
             UIChatWindows.Instance.PassMessage($"Welcome, {ModMain.ShalazamClient.Username}. Thank you for contributing to Shalazam!", ChatChannelType.Info);
@@ -64,7 +64,7 @@ public static class EntityManager
         }
 
         WorldItems.Add(networkWorldItem);
-        
+
         // Filter items that can't be gathered, but are still network objects, e.g., doors
         if (networkWorldItem.worldItemType is WorldItemTypeEnum.Harvestable)
         {
@@ -78,7 +78,7 @@ public static class EntityManager
         if (networkWorldItem.worldItemType is WorldItemTypeEnum.CraftingStation)
         {
             CraftingStations.Add(networkWorldItem);
-            
+
             if (!string.IsNullOrWhiteSpace(_apiKey))
             {
                 ModMain.ShalazamClient.PostWorldItemLocation(networkWorldItem);
@@ -107,7 +107,7 @@ public static class EntityManager
         }
 
         var npcName = entityNpcGameObject.Nameplate.nameText.text;
-        
+
         if (entityNpcGameObject.Profession == NpcProfession.None)
         {
             Monsters.Add(entityNpcGameObject);
@@ -116,7 +116,7 @@ public static class EntityManager
             {
                 return;
             }
-            
+
             // Weird behaviour in game, all NPCs have subname text set to Soandso's Minion, I guess as placeholder, but it
             // never displays this, so we'll rely on it I guess... sometimes minions are bugged and display as attackable
             // NPCs even if they're a player's summon. So we can't just rely on petmaster, as that's set to null in these cases.
@@ -142,7 +142,7 @@ public static class EntityManager
             {
                 return;
             }
-            
+
             if (Blacklist.Contains(npcName))
             {
                 return;
@@ -156,13 +156,18 @@ public static class EntityManager
         else
         {
             FriendlyNPCs.Add(entityNpcGameObject);
+            
+            if (!string.IsNullOrWhiteSpace(_apiKey))
+            {
+                ModMain.ShalazamClient.PostNpc(entityNpcGameObject);
+            }
         }
     }
-    
+
     public static void OnNpcRemoved(EntityNpcGameObject entityNpcGameObject)
     {
         Monsters.Remove(entityNpcGameObject);
-        
+
         LootCache.OnNpcDeleted(entityNpcGameObject);
     }
 }

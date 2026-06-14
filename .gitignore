@@ -36,3 +36,4 @@ Desktop.ini
 .idea
 
 global.json
+Directory.Build.props
