@@ -109,6 +109,42 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(entityNpcGameObject.ToNpcPayload());
     }
 
+    public void PostNpcVendorItems(string npcName, IEnumerable<NpcVendorItemEntry> items)
+    {
+        if (!_roles.Contains(Permissions.CreateNpc))
+        {
+            return;
+        }
+
+        var id = StableHash(npcName);
+        PostRequest(new NpcVendorItemsPayload
+        {
+            Id = id,
+            Type = "npc-vendor-items",
+            NpcVendorItems = new NpcVendorItemsBody
+            {
+                Id = id,
+                Data = new NpcVendorItemsData
+                {
+                    NpcName = npcName,
+                    Items = items
+                }
+            }
+        });
+    }
+
+    private static uint StableHash(string s)
+    {
+        const uint prime = 16777619;
+        uint hash = 2166136261;
+        foreach (char c in s)
+        {
+            hash ^= c;
+            hash *= prime;
+        }
+        return hash;
+    }
+
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
     {
         if (!_roles.Contains(Permissions.CreateMonster))

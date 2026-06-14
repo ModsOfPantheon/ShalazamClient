@@ -2,6 +2,7 @@ using HarmonyLib;
 using Il2Cpp;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using MelonLoader;
+using ShalazamPlugin.SDK.Models;
 
 namespace ShalazamPlugin.Hooks;
 
@@ -10,6 +11,8 @@ namespace ShalazamPlugin.Hooks;
 [HarmonyPatch(typeof(UINpcInteractionMerchant), nameof(UINpcInteractionMerchant.RefreshVendorItems))]
 public class VendorUIRefreshHook
 {
+    private static readonly HashSet<string> SeenVendors = new();
+
     private static void Postfix(UINpcInteractionMerchant __instance, TieredMerchantTab unlockedTabs, IEntityNpc npc)
     {
         try
@@ -23,6 +26,26 @@ public class VendorUIRefreshHook
             if (items == null) return;
             VendorHookHelpers.LogVendorItems(items);
             VendorHookHelpers.LogTierRequirements(vendorLogic?.TierRequirements);
+
+            foreach (var vi in items)
+            {
+                if (vi.Item != null)
+                    ItemCache.OnItemAdded(vi.Item, default);
+            }
+
+            if (!SeenVendors.Add(npcName)) return;
+
+            var entries = items
+                .Where(vi => vi.Item != null)
+                .Select(vi => new NpcVendorItemEntry
+                {
+                    Id = vi.Item.Template.ItemId,
+                    Name = vi.Item.Template.ItemName,
+                    Tab = vi.Tab.ToString()
+                })
+                .ToList();
+
+            ModMain.ShalazamClient.PostNpcVendorItems(npcName, entries);
         }
         catch (Exception ex)
         {
@@ -64,6 +87,24 @@ static class VendorHookHelpers
                 int? buyPrice = null;
                 try { buyPrice = template.BuyPrice?.Unbox<int>(); } catch { }
 
+                // instance-level stat modifiers (what ToItemPayload reads)
+                var instanceStatMods = vi.Item?.statModifiers;
+                var instanceStatModCount = instanceStatMods?.Count ?? -1;
+                var instanceStatModStr = "none";
+                if (instanceStatMods != null && instanceStatMods.Count > 0)
+                {
+                    var parts = new List<string>();
+                    foreach (var sm in instanceStatMods)
+                    {
+                        try { parts.Add($"{sm.Item1}={sm.Item2.Value}({sm.Item2.ModifierType})"); } catch { parts.Add("?"); }
+                    }
+                    instanceStatModStr = string.Join(", ", parts);
+                }
+
+                // template-level stat modifiers (separate array on the template)
+                var templateStatMods = template.StatModifiers;
+                var templateStatModCount = templateStatMods?.Count ?? -1;
+
                 MelonLogger.Msg(
                     $"[Vendor]   id={template.ItemId}" +
                     $" name={template.ItemName}" +
@@ -80,7 +121,8 @@ static class VendorHookHelpers
                     $" itemKey={template.ItemKey}" +
                     $" iconKey={template.IconKey}" +
                     $" flags={template.ItemFlags}" +
-                    $" maxStack={template.MaxStackSize}"
+                    $" maxStack={template.MaxStackSize}" +
+                    $" stackSize={vi.Item?.StackSize}"
                 );
             }
             catch (Exception ex)
