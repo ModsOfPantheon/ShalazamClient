@@ -156,32 +156,7 @@ public static class EntityManager
         else
         {
             FriendlyNPCs.Add(entityNpcGameObject);
-            var pool = entityNpcGameObject.Pools.GetPool(PoolType.Health);
-            var pos = entityNpcGameObject.transform.position;
-            var sm = entityNpcGameObject.StateMachine;
-            var info = entityNpcGameObject.Info;
-            MelonLogger.Msg(
-                $"[FriendlyNPC]" +
-                $" Name={npcName}" +
-                $" | Title={info.Title}" +
-                $" | Kind={info.Kind}" +
-                $" | Tier={info.Tier}" +
-                $" | Race={info.Race}" +
-                $" | Class={info.Class}" +
-                $" | Profession={entityNpcGameObject.Profession}" +
-                $" | SubName={entityNpcGameObject.Nameplate.subNameText.text}" +
-                $" | Level={entityNpcGameObject.Nameplate.levelText.text}" +
-                $" | HP={pool.Current}/{pool.Max}" +
-                $" | IsDead={entityNpcGameObject.Status.IsDead()}" +
-                $" | IsEvading={sm.IsEvading}" +
-                $" | IsLeashing={sm.IsLeashing}" +
-                $" | IsAsleep={sm.IsAsleep}" +
-                $" | TrackRadius={MathF.Round(entityNpcGameObject.Tracking.GetTrackingRadius(), 2)}" +
-                $" | PetMaster={entityNpcGameObject.PetMaster}" +
-                $" | Pos=({MathF.Round(pos.x, 2)}, {MathF.Round(pos.y, 2)}, {MathF.Round(pos.z, 2)})" +
-                $" | AccessLevel={info.AccessLevel}"
-            );
-
+            
             if (!string.IsNullOrWhiteSpace(_apiKey))
             {
                 ModMain.ShalazamClient.PostNpc(entityNpcGameObject);

@@ -50,10 +50,24 @@ var allDlls = Directory.GetFiles(il2cppDir, "*.dll")
 var resolver = new PathAssemblyResolver(allDlls);
 using var mlc = new MetadataLoadContext(resolver);
 
-var gameAssemblies = new[] { "Il2CppScripts.dll", "Assembly-CSharp.dll", "Il2CppPlugins.dll" };
-var allTypes = gameAssemblies
-    .Select(name => Path.Combine(il2cppDir, name))
-    .Where(File.Exists)
+// Scan all game DLLs: Assembly-CSharp plus any Il2Cpp* that aren't pure infrastructure
+var gameAssemblyPaths = Directory.GetFiles(il2cppDir, "*.dll")
+    .Where(path => {
+        var name = Path.GetFileNameWithoutExtension(path);
+        if (name == "Assembly-CSharp") return true;
+        if (!name.StartsWith("Il2Cpp")) return false;
+        // Exclude runtime infrastructure
+        if (name.StartsWith("Il2CppSystem") || name.StartsWith("Il2CppMono") ||
+            name.StartsWith("Il2CppInterop") || name.StartsWith("Il2CppMicrosoft") ||
+            name.StartsWith("Il2CppNewtonsoft") || name.StartsWith("Il2CppTMPro") ||
+            name.StartsWith("Il2CppUnityEngine") || name.StartsWith("Il2CppUnity.") ||
+            name.StartsWith("Il2CppUnityStandard"))
+            return false;
+        return true;
+    })
+    .ToArray();
+
+var allTypes = gameAssemblyPaths
     .SelectMany(path => {
         try { return mlc.LoadFromAssemblyPath(path).GetTypes(); }
         catch { return Array.Empty<Type>(); }
@@ -111,6 +125,7 @@ void GenerateHtml(string outputPath)
 {
     Console.Error.Write("Building type data... ");
     var entries = allTypes.Values
+        .Where(t => !IsGeneratedType(t))
         .OrderBy(t => t.FullName)
         .Select(BuildTypeData)
         .ToArray();
@@ -144,6 +159,17 @@ object BuildTypeData(Type t)
 
         try
         {
+            foreach (var f in t.GetFields(flags)
+                .Where(f => !f.IsSpecialName && !f.Name.EndsWith("k__BackingField") && !IsNoisyMember(f.Name))
+                .OrderBy(f => f.Name))
+            {
+                members.Add(new { k = "f", t = FriendlyTypeName(f.FieldType), tf = f.FieldType.FullName ?? "", n = f.Name });
+            }
+        }
+        catch { }
+
+        try
+        {
             foreach (var p in t.GetProperties(flags)
                 .Where(p => !p.Name.EndsWith("k__BackingField") && !IsNoisyMember(p.Name))
                 .OrderBy(p => p.Name))
@@ -166,9 +192,11 @@ object BuildTypeData(Type t)
         catch { }
     }
 
+    var displayName = t.DeclaringType != null ? $"{t.DeclaringType.Name}.{t.Name}" : t.Name;
+
     return new
     {
-        n  = t.Name,
+        n  = displayName,
         fn = t.FullName ?? t.Name,
         ns = t.Namespace ?? "",
         b  = t.BaseType?.Name ?? "",
@@ -228,12 +256,15 @@ a.tl:hover{text-decoration:underline}
 .refs-list div{padding:1px 0;color:#cdd6f4}
 .refs-list .rm{color:#6c7086;font-size:11px}
 .hidden{display:none!important}
+#refd-lbl{font-size:12px;color:#6c7086;white-space:nowrap;cursor:pointer;display:flex;align-items:center;gap:5px}
+#refd-lbl input{cursor:pointer;accent-color:#cba6f7}
 </style>
 </head>
 <body>
 <div id="hdr">
   <h1>⚔ Pantheon Types</h1>
   <input type="search" id="search" placeholder="Search types…" autofocus>
+  <label id="refd-lbl"><input type="checkbox" id="refd"> Hide unreferenced</label>
   <div id="stats"></div>
 </div>
 <div id="list"></div>
@@ -252,6 +283,7 @@ function esc(s) {
 function renderMembers(t) {
   if (!t.m.length) return '<div style="color:#6c7086;font-size:12px;padding:4px 0">No members</div>';
   const vals = t.m.filter(m=>m.k==='v');
+  const fields = t.m.filter(m=>m.k==='f');
   const props = t.m.filter(m=>m.k==='p');
   const methods = t.m.filter(m=>m.k==='m');
   let html = '';
@@ -260,6 +292,12 @@ function renderMembers(t) {
     html += '<div class="section-label">Values</div><table>';
     for (const m of vals)
       html += `<tr><td class="kc">val</td><td class="vc">${esc(m.n)}</td><td class="pc">= ${m.v}</td></tr>`;
+    html += '</table>';
+  }
+  if (fields.length) {
+    html += '<div class="section-label">Fields</div><table>';
+    for (const m of fields)
+      html += `<tr><td class="kc">field</td><td class="tc">${tlink(m.t,m.tf)}</td><td class="nc">${esc(m.n)}</td></tr>`;
     html += '</table>';
   }
   if (props.length) {
@@ -284,7 +322,7 @@ function findRefs(fullName) {
   for (const t of T) {
     const hits = [];
     for (const m of t.m) {
-      if (m.k==='p' && m.tf===fullName) hits.push(`prop ${m.n}`);
+      if ((m.k==='f'||m.k==='p') && m.tf===fullName) hits.push(`${m.k==='f'?'field':'prop'} ${m.n}`);
       if (m.k==='m') {
         if (m.rf===fullName) hits.push(`return ${m.n}(…)`);
         else if (m.ps.some(p=>p.tf===fullName)) hits.push(`param ${m.n}(…)`);
@@ -363,7 +401,8 @@ function navigateTo(fullName) {
   if (!div) return;
   if (div.classList.contains('hidden')) {
     document.getElementById('search').value = '';
-    applyFilter('');
+    document.getElementById('refd').checked = false;
+    applyFilter();
   }
   if (!div.classList.contains('open')) toggle(i);
   div.scrollIntoView({behavior:'smooth', block:'nearest'});
@@ -372,19 +411,40 @@ function navigateTo(fullName) {
   location.hash = encodeURIComponent(fullName);
 }
 
-function applyFilter(q) {
-  q = q.toLowerCase().trim();
+let refSet = null;
+function getRefSet() {
+  if (refSet) return refSet;
+  refSet = new Set();
+  for (const t of T)
+    for (const m of t.m) {
+      if (m.tf) refSet.add(m.tf);
+      if (m.rf) refSet.add(m.rf);
+      if (m.ps) for (const p of m.ps) if (p.tf) refSet.add(p.tf);
+    }
+  return refSet;
+}
+
+function typeMatches(t, q) {
+  if (t.fn.toLowerCase().includes(q) || t.n.toLowerCase().includes(q)) return true;
+  return t.m.some(m => m.n.toLowerCase().includes(q));
+}
+
+function applyFilter() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const hideUnref = document.getElementById('refd').checked;
+  const rs = hideUnref ? getRefSet() : null;
   let n = 0;
   for (let i = 0; i < T.length; i++) {
     const t = T[i];
-    const show = !q || t.fn.toLowerCase().includes(q) || t.n.toLowerCase().includes(q);
+    const show = (!q || typeMatches(t, q)) && (!rs || rs.has(t.fn));
     document.getElementById(`t${i}`).classList.toggle('hidden', !show);
     if (show) n++;
   }
   document.getElementById('stats').textContent = `${n} / ${T.length} types`;
 }
 
-document.getElementById('search').addEventListener('input', e => applyFilter(e.target.value));
+document.getElementById('search').addEventListener('input', applyFilter);
+document.getElementById('refd').addEventListener('change', applyFilter);
 document.getElementById('stats').textContent = `${T.length} types`;
 
 buildList();
@@ -429,6 +489,11 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         return;
     }
 
+    var pubFields = type.GetFields(flags)
+        .Where(f => !f.IsSpecialName && !f.Name.EndsWith("k__BackingField") && !IsNoisyMember(f.Name))
+        .OrderBy(f => f.Name)
+        .ToArray();
+
     var props = type.GetProperties(flags)
         .Where(p => !p.Name.EndsWith("k__BackingField") && !IsNoisyMember(p.Name))
         .OrderBy(p => p.Name)
@@ -439,8 +504,23 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         .OrderBy(m => m.Name)
         .ToArray();
 
-    var allMembers = props.Length + methods.Length;
+    var allMembers = pubFields.Length + props.Length + methods.Length;
     var memberIndex = 0;
+
+    foreach (var field in pubFields)
+    {
+        memberIndex++;
+        var isLast = memberIndex == allMembers;
+        var branch = isLast ? "└── " : "├── ";
+        var childIndent = indent + (isLast ? "    " : "│   ");
+        var memberType = field.FieldType;
+        var gameType = ResolveGameType(memberType);
+
+        Console.WriteLine($"{indent}{branch}[f] {FriendlyTypeName(memberType)}  {field.Name}");
+
+        if (depth < maxDepth && gameType != null && !visited.Contains(gameType.FullName ?? gameType.Name))
+            PrintTree(gameType, childIndent, false, depth + 1, visited);
+    }
 
     foreach (var prop in props)
     {
@@ -545,6 +625,18 @@ string FriendlyTypeName(Type t)
     var baseName = backtick >= 0 ? t.Name[..backtick] : t.Name;
     var args = t.GetGenericArguments().Select(FriendlyTypeName);
     return $"{baseName}<{string.Join(", ", args)}>";
+}
+
+bool IsGeneratedType(Type t)
+{
+    var name = t.Name;
+    // Compiler-generated: closures (<>c), async state machines (<Method>d__0), etc.
+    if (name.Contains('<') || name.Contains('>')) return true;
+    // IL2CPP / compiler internals starting with double-underscore or underscore-Private
+    if (name.StartsWith("__") || name.StartsWith("_Private")) return true;
+    // Nested inside a generated type (e.g. _PrivateImplementationDetails_.ValueType*)
+    if (t.DeclaringType != null && IsGeneratedType(t.DeclaringType)) return true;
+    return false;
 }
 
 bool IsNoisyMember(string name) => name is

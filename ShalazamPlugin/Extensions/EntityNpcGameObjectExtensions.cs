@@ -36,6 +36,7 @@ public static class EntityNpcGameObjectExtensions
                     LocX = MathF.Round(pos.x, 2),
                     LocY = MathF.Round(pos.y, 2),
                     LocZ = MathF.Round(pos.z, 2),
+                    PrimaryFactionId = entityNpcGameObject.Factions.PrimaryFactionId,
                 }
             }
         };
@@ -56,7 +57,8 @@ public static class EntityNpcGameObjectExtensions
                 LocX = MathF.Round(entityNpcGameObject.transform.position.x, 2),
                 LocY = MathF.Round(entityNpcGameObject.transform.position.y, 2),
                 LocZ = MathF.Round(entityNpcGameObject.transform.position.z, 2),
-                MaxHp = (int)entityNpcGameObject.Pools.GetPool(PoolType.Health).Max
+                MaxHp = (int)entityNpcGameObject.Pools.GetPool(PoolType.Health).Max,
+                PrimaryFactionId = entityNpcGameObject.Factions.PrimaryFactionId,
             }
         };
     }

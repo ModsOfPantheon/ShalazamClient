@@ -16,4 +16,5 @@ public class NpcInfoPayload
     public float LocX { get; set; }
     public float LocY { get; set; }
     public float LocZ { get; set; }
+    public int? PrimaryFactionId { get; set; }
 }

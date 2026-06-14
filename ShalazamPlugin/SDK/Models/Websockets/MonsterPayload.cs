@@ -16,4 +16,5 @@ public class MonsterBody
     public int Hour { get; set; }
     public string Zone { get; set; }
     public int MaxHp { get; set; }
+    public int? PrimaryFactionId { get; set; }
 }
