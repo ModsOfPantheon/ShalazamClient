@@ -11,13 +11,14 @@ namespace ShalazamPlugin.Hooks;
 [HarmonyPatch(typeof(UINpcInteractionMerchant), nameof(UINpcInteractionMerchant.RefreshVendorItems))]
 public class VendorUIRefreshHook
 {
-    private static readonly HashSet<string> SeenVendors = new();
+    private static readonly HashSet<uint> SeenVendors = new();
 
     private static void Postfix(UINpcInteractionMerchant __instance, TieredMerchantTab unlockedTabs, IEntityNpc npc)
     {
         try
         {
-            var npcName = npc?.PetMaster?.Info?.DisplayName ?? "(unknown)";
+            var npcGameObject = npc?.TryCast<EntityNpcGameObject>();
+            var npcName = npcGameObject?.info?.DisplayName ?? "(unknown)";
             var vendorLogic = npc?.Vendor;
             var items = vendorLogic?.vendorItems;
 
@@ -33,7 +34,7 @@ public class VendorUIRefreshHook
                     ItemCache.OnItemAdded(vi.Item, default);
             }
 
-            if (!SeenVendors.Add(npcName)) return;
+            if (npcGameObject == null || !SeenVendors.Add(npcGameObject.NetworkId.Value)) return;
 
             var entries = items
                 .Where(vi => vi.Item != null)
@@ -63,7 +64,7 @@ public class VendorLoadItemsHook
     {
         try
         {
-            var npcName = __instance.Entity?.PetMaster?.Info?.DisplayName ?? "(unknown)";
+            var npcName = __instance.Entity?.TryCast<EntityNpcGameObject>()?.info?.DisplayName ?? "(unknown)";
             MelonLogger.Msg($"[Vendor:LoadItems] NPC={npcName} ItemCount={vendorItems?.Count ?? 0}");
         }
         catch (Exception ex)
