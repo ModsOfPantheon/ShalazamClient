@@ -106,9 +106,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             return;
         }
 
-        var payload = entityNpcGameObject.ToNpcPayload();
-        MelonLogger.Msg($"[NPC] {JsonSerializer.Serialize(payload, new JsonSerializerOptions { PropertyNamingPolicy = SnakeCaseNamingPolicy.Instance, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull })}");
-        PostRequest(payload);
+        PostRequest(entityNpcGameObject.ToNpcPayload());
     }
 
     public void PostNpcVendorItems(uint networkId, string npcName, IEnumerable<NpcVendorItemEntry> items)
