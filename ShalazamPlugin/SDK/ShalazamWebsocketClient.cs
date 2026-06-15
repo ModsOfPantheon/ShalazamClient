@@ -20,7 +20,7 @@ public class ShalazamWebsocketClient : IShalazamClient
     private readonly Uri _endpoint = new("wss://shalazam.info/api/v1/client");
     private readonly string _apiKey;
     private const int ReconnectDelayMs = 5000;
-    
+
     public event Func<string, Task>? MessageReceived;
     public event Func<WebSocketCloseStatus?, string?, Task>? Disconnected;
 
@@ -45,7 +45,7 @@ public class ShalazamWebsocketClient : IShalazamClient
     private static Task OnDisconnect(WebSocketCloseStatus? closeStatus, string? disconnectStatusMessage)
     {
         MelonLogger.Msg($"Oh no we disconnected :( Status {closeStatus}, arg2 {disconnectStatusMessage}");
-        
+
         return Task.CompletedTask;
     }
 
@@ -55,7 +55,7 @@ public class ShalazamWebsocketClient : IShalazamClient
         {
             return;
         }
-        
+
         PostRequest(networkWorldItem.ToPostResourcePayload());
     }
 
@@ -75,7 +75,7 @@ public class ShalazamWebsocketClient : IShalazamClient
         {
             return;
         }
-        
+
         PostRequest(entityNpcGameObject.ToMonsterPayload());
     }
 
@@ -95,7 +95,7 @@ public class ShalazamWebsocketClient : IShalazamClient
         {
             return;
         }
-        
+
         PostRequest(ability.ToRequestPayload());
     }
 
@@ -107,6 +107,31 @@ public class ShalazamWebsocketClient : IShalazamClient
         }
 
         PostRequest(entityNpcGameObject.ToNpcPayload());
+    }
+
+    public void PostNpcVendorItems(uint networkId, string npcName, IEnumerable<NpcVendorItemEntry> items)
+    {
+        if (!_roles.Contains(Permissions.CreateNpc))
+        {
+            return;
+        }
+
+        var payload = new NpcVendorItemsPayload
+        {
+            Id = networkId,
+            Type = "npc-vendor-items",
+            NpcVendorItems = new NpcVendorItemsBody
+            {
+                Id = HashHelper.StableHash(npcName),
+                Data = new NpcVendorItemsData
+                {
+                    NpcName = npcName,
+                    Items = items
+                }
+            }
+        };
+
+        PostRequest(payload);
     }
 
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
@@ -130,7 +155,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             },
             Type = "drop"
         };
-        
+
         PostRequest(payload);
     }
 
@@ -151,7 +176,7 @@ public class ShalazamWebsocketClient : IShalazamClient
                 MelonLogger.Error("Failed to remove ongoing request from dictionary. This shouldn't happen.");
                 return Task.CompletedTask;
             }
-            
+
             if (response.Type != "success")
             {
                 MelonLogger.Error($"Request failed, response: {body}. Original request: {requestBody}");
@@ -160,11 +185,11 @@ public class ShalazamWebsocketClient : IShalazamClient
 
         return Task.CompletedTask;
     }
-    
+
     private void PostRequest<T>(T payload) where T : WebsocketPayload
     {
         payload.IsTestRealm = Globals.IsPTR;
-        
+
         if (_ws.State != WebSocketState.Open)
         {
             MelonLogger.Warning("Websocket is not connected. Dropping request.");
@@ -177,10 +202,10 @@ public class ShalazamWebsocketClient : IShalazamClient
         {
             MelonLogger.Warning($"We tried to post a duplicate request. This may be a bug, please report it :) Request: {bodyString}");
         }
-        
+
         _ws.SendAsync(Encoding.UTF8.GetBytes(bodyString), WebSocketMessageType.Text, true, CancellationToken.None).ConfigureAwait(false);
     }
-    
+
     private async Task ReceiveLoop(CancellationToken cancellationToken)
     {
         try
