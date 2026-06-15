@@ -15,11 +15,11 @@ public static class EntityNpcGameObjectExtensions
 
         return new NpcPayload
         {
-            Id = StableHash(info.DisplayName),
+            Id = entityNpcGameObject.NetworkId.Value,
             Type = "npc",
             Npc = new NpcBody
             {
-                Id = StableHash(info.DisplayName),
+                Id = HashHelper.StableHash(info.DisplayName),
                 Data = new NpcInfoPayload
                 {
                     Name = info.DisplayName,
@@ -63,19 +63,5 @@ public static class EntityNpcGameObjectExtensions
         };
     }
 
-    private static uint StableHash(string s, int x = 0, int z = 0)
-    {
-        const uint prime = 16777619;
-        uint hash = 2166136261;
-        foreach (char c in s)
-        {
-            hash ^= c;
-            hash *= prime;
-        }
-        hash ^= (uint)x;
-        hash *= prime;
-        hash ^= (uint)z;
-        hash *= prime;
-        return hash;
-    }
+
 }

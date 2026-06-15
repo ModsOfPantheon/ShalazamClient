@@ -109,21 +109,20 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(entityNpcGameObject.ToNpcPayload());
     }
 
-    public void PostNpcVendorItems(string npcName, IEnumerable<NpcVendorItemEntry> items)
+    public void PostNpcVendorItems(uint networkId, string npcName, IEnumerable<NpcVendorItemEntry> items)
     {
         if (!_roles.Contains(Permissions.CreateNpc))
         {
             return;
         }
 
-        var id = StableHash(npcName);
         PostRequest(new NpcVendorItemsPayload
         {
-            Id = id,
+            Id = networkId,
             Type = "npc-vendor-items",
             NpcVendorItems = new NpcVendorItemsBody
             {
-                Id = id,
+                Id = HashHelper.StableHash(npcName),
                 Data = new NpcVendorItemsData
                 {
                     NpcName = npcName,
@@ -131,22 +130,6 @@ public class ShalazamWebsocketClient : IShalazamClient
                 }
             }
         });
-    }
-
-    private static uint StableHash(string s)
-    {
-        const uint prime = 16777619;
-        uint hash = 2166136261;
-        foreach (char c in s)
-        {
-            hash ^= c;
-            hash *= prime;
-        }
-        hash ^= 0;
-        hash *= prime;
-        hash ^= 0;
-        hash *= prime;
-        return hash;
     }
 
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)

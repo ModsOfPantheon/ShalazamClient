@@ -39,7 +39,7 @@ public class VendorUIRefreshHook
                 })
                 .ToList();
 
-            ModMain.ShalazamClient.PostNpcVendorItems(npcName, entries);
+            ModMain.ShalazamClient.PostNpcVendorItems(npcGameObject.NetworkId.Value, npcName, entries);
         }
         catch (Exception ex)
         {
