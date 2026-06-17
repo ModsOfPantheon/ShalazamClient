@@ -34,6 +34,9 @@ public static class AbilityDataExtensions
         var casterBetweenPoolCondition = GetCasterBetweenPoolCondition(abilityData.Conditions);
         var maxLevelGapBetweenCasterAndTarget = GetMaxLevelBetweenCasterAndTarget(abilityData.Conditions);
         var requiresTargetIsAPet = GetTargetPetCondition(abilityData.Conditions);
+        var requiresCasterHasStatuses = GetCasterHasAllStatusCondition(abilityData.Conditions);
+        var requiresCasterWeaponTypes = GetCasterRequiredWeaponTypes(abilityData.Conditions);
+        var requiresCasterAtLeastPool = GetCasterAtLeastPercentPoolCondition(abilityData.Conditions);
 
         var masteryAbilityIds = new List<int>();
         foreach (var ability in abilityData.MasteryUpgrades)
@@ -134,6 +137,9 @@ public static class AbilityDataExtensions
             MaxLevelGapBetweenCasterAndTarget = maxLevelGapBetweenCasterAndTarget,
             RequiresPoolWithinRange = casterBetweenPoolCondition,
             RequiresTargetIsAPet = requiresTargetIsAPet,
+            RequiresCasterHasStatuses = requiresCasterHasStatuses,
+            RequiresCasterPrimaryWeaponTypes = requiresCasterWeaponTypes,
+            RequiresCasterAtLeastPool = requiresCasterAtLeastPool,
             MasteryAbilities = masteryAbilityIds.ToArray(),
             BaseAbilityId = abilityData.baseAbility?.Id
         };
@@ -452,6 +458,64 @@ public static class AbilityDataExtensions
         return null;
     }
 
+    private static string[] GetCasterHasAllStatusCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
+    {
+        foreach (var condition in conditions)
+        {
+            var statusCondition = condition.TryCast<CasterHasAllStatusCondition>();
+            if (statusCondition != null)
+            {
+                var list = new List<string>();
+                foreach (var status in statusCondition.StatusTypes)
+                {
+                    list.Add(status.ToString());
+                }
+
+                return list.ToArray();
+            }
+        }
+
+        return Array.Empty<string>();
+    }
+
+    private static string[] GetCasterRequiredWeaponTypes(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
+    {
+        foreach (var condition in conditions)
+        {
+            var weaponCondition = condition.TryCast<CasterHasPrimaryWeaponTypeList>();
+            if (weaponCondition != null)
+            {
+                var list = new List<string>();
+                foreach (var weaponType in weaponCondition.WeaponTypes)
+                {
+                    list.Add(weaponType.ToString());
+                }
+
+                return list.ToArray();
+            }
+        }
+
+        return Array.Empty<string>();
+    }
+
+    private static AbilityAtLeastPoolConditionData? GetCasterAtLeastPercentPoolCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
+    {
+        foreach (var condition in conditions)
+        {
+            var poolCondition = condition.TryCast<CasterHasAtLeastPercentPoolCondition>();
+            if (poolCondition != null)
+            {
+                return new AbilityAtLeastPoolConditionData
+                {
+                    Percent = poolCondition.Percent,
+                    PoolType = poolCondition.PoolType.ToString(),
+                };
+            }
+        }
+
+        return null;
+    }
+
     private static (float MinRange, float MaxRange)? GetCastRange(
         Il2CppSystem.Collections.Generic.List<ICondition> abilityDataConditions)
     {
@@ -501,6 +565,9 @@ public static class AbilityDataExtensions
         Il2CppType.Of<CasterIsNotInCombat>(),
         Il2CppType.Of<MaxLevelGapBetweenCasterAndTargetCondition>(),
         Il2CppType.Of<CasterBetweenPercentPoolCondition>(),
-        Il2CppType.Of<TargetIsPetCondition>()
+        Il2CppType.Of<TargetIsPetCondition>(),
+        Il2CppType.Of<CasterHasAllStatusCondition>(),
+        Il2CppType.Of<CasterHasPrimaryWeaponTypeList>(),
+        Il2CppType.Of<CasterHasAtLeastPercentPoolCondition>()
     };
 }
