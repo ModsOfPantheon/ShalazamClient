@@ -19,7 +19,7 @@ public class PlayerNetworkStart
         {
             Globals.LocalPlayer = __instance;
             Globals.LocalPlayer.Inventory.add_ItemAddedEvent(new Action<Item, InventoryWithPersyst.AddFlags>(ItemCache.OnItemAdded));
-            Globals.LocalPlayer.Inventory.add_ItemStackSizeChangedEvent(new Action<Item, int>(ItemCache.OnItemStackSizeChanged));
+            Globals.LocalPlayer.Inventory.add_ItemStackSizeChangedEvent(new Action<Item, int, int>(ItemCache.OnItemStackSizeChanged));
         }
         
         EntityManager.OnPlayerAdded(__instance);
