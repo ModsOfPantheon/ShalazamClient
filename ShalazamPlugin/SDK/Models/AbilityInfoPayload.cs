@@ -75,6 +75,9 @@ public class AbilityInfoPayload
     public int? MaxLevelGapBetweenCasterAndTarget { get; set; }
     public AbilityPoolBetweenConditionData? RequiresPoolWithinRange { get; set; }
     public bool RequiresTargetIsAPet { get; set; }
+    public string[] RequiresCasterHasStatuses { get; set; }
+    public string[] RequiresCasterPrimaryWeaponTypes { get; set; }
+    public AbilityAtLeastPoolConditionData? RequiresCasterAtLeastPool { get; set; }
     public int[] MasteryAbilities { get; set; }
     public int? BaseAbilityId { get; set; }
     public string ClassName { get; set; }
