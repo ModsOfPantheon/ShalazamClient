@@ -21,11 +21,14 @@ public class VendorUIRefreshHook
 
             if (items == null) return;
 
+            var swItemCache = System.Diagnostics.Stopwatch.StartNew();
             foreach (var vi in items)
             {
                 if (vi.Item != null)
                     ItemCache.OnItemAdded(vi.Item, default);
             }
+            swItemCache.Stop();
+            MelonLoader.MelonLogger.Msg($"[Vendor:UIRefresh] ItemCache loop took {swItemCache.ElapsedMilliseconds}ms");
 
             if (npcGameObject == null || !SeenVendors.Add(npcGameObject.NetworkId.Value)) return;
 
