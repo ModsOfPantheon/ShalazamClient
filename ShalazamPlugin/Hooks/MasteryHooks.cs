@@ -17,12 +17,10 @@ namespace ShalazamPlugin.Hooks;
 [HarmonyPatch(typeof(MasteryLocalDispatcher), nameof(MasteryLocalDispatcher.HandleOpen))]
 public class MasteryHandleOpenHook
 {
-    private static bool _sent;
+    private static readonly HashSet<string> _sentClasses = new();
 
     private static void Prefix(MasteryLocalDispatcher __instance)
     {
-        if (_sent) return;
-
         try
         {
             var logic = __instance.GetComponent<MasteryTree>()?.logic;
@@ -30,6 +28,8 @@ public class MasteryHandleOpenHook
 
             var context = logic.BuildPlayerContext();
             var characterClass = context?.CharacterClass.ToString() ?? "Unknown";
+
+            if (!_sentClasses.Add(characterClass)) return;
 
             var states = logic.GetDerivedStates();
             var nodeDataList = new List<MasteryNodeData>();
@@ -46,11 +46,9 @@ public class MasteryHandleOpenHook
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
                 WriteIndented = true,
             });
-            MelonLogger.Msg($"[Mastery:HandleOpen] {json}");
+            // MelonLogger.Msg($"[Mastery:HandleOpen] {json}");
 
             ModMain.ShalazamClient?.PostMastery(payload);
-
-            _sent = true;
         }
         catch (Exception ex) { MelonLogger.Warning($"[Mastery:HandleOpen] {ex.Message}"); }
     }
