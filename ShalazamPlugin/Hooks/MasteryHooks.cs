@@ -49,6 +49,7 @@ public class MasteryHandleOpenHook
             MelonLogger.Msg($"[Mastery:HandleOpen] {json}");
 
             ModMain.ShalazamClient?.PostMastery(payload);
+
             _sent = true;
         }
         catch (Exception ex) { MelonLogger.Warning($"[Mastery:HandleOpen] {ex.Message}"); }
