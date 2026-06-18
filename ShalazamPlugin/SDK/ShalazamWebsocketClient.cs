@@ -18,7 +18,6 @@ public class ShalazamWebsocketClient : IShalazamClient
     private Task? _receiveTask;
     private readonly SemaphoreSlim _connectLock = new(1, 1);
     private readonly Uri _endpoint = new("wss://shalazam.info/api/v1/client");
-    //private readonly Uri _endpoint = new("ws://192.168.0.204:3000/api/v1/client");
     private readonly string _apiKey;
     private const int ReconnectDelayMs = 5000;
 
