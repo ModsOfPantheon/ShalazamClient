@@ -106,7 +106,6 @@ public class ShalazamWebsocketClient : IShalazamClient
             return;
         }
 
-        MelonLogger.Msg($"[NPC] {entityNpcGameObject.Info.DisplayName} NetworkId={entityNpcGameObject.NetworkId.Value}");
         PostRequest(entityNpcGameObject.ToNpcPayload());
     }
 
