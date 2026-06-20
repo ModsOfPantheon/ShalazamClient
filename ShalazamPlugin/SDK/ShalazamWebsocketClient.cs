@@ -134,6 +134,16 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(payload);
     }
 
+    public void PostMastery(MasteryPayload payload)
+    {
+        if (!_roles.Contains(Permissions.CreateMastery))
+        {
+            return;
+        }
+
+        PostRequest(payload);
+    }
+
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
     {
         if (!_roles.Contains(Permissions.CreateMonster))
