@@ -11,32 +11,7 @@ public static class AbilityDataExtensions
 {
     public static AbilityPayload ToRequestPayload(this AbilityData abilityData)
     {
-        CheckConditions(abilityData);
-        
-        // TODO: This got out of hand, consolidate this wankery to a single function
-        var castRange = GetCastRange(abilityData.Conditions);
-        var meleeRange = GetMeleeRange(abilityData.Conditions);
-        var levelRange = GetLevelRange(abilityData.Conditions);
-        var requiresLineOfSight = GetLineOfSightRequirement(abilityData.Conditions);
-        var targetEntityKindRestriction = GetTargetEntityKind(abilityData.Conditions);
-        var targetMustBeAlive = GetTargetAliveCondition(abilityData.Conditions);
-        var mustFaceTarget = GetMustFaceTargetCondition(abilityData.Conditions);
-        var minimumPrimaryWeaponSkill = GetMinimumPrimaryWeaponSkill(abilityData.Conditions);
-        var minimumSecondaryWeaponSkill = GetMinimumSecondaryWeaponSkill(abilityData.Conditions);
-        var requiresTargetMissingStatus = GetMissingStatusRequirement(abilityData.Conditions);
-        var requiresTargetMissingBuffs = GetMissingBuffsRequirement(abilityData.Conditions);
-        var requiresCasterMissingStatuses = GetCasterMissingStatusRequirement(abilityData.Conditions);
-        var requiresTargetIsRezableCorpse = GetTargetIsRezableCorpse(abilityData.Conditions);
-        var requiresTargetInCombat = GetTargetInCombatCondition(abilityData.Conditions);
-        var requiresTargetNotInCombat = GetTargetNotInCombatCondition(abilityData.Conditions);
-        var requiresCasterNotInCombat = GetCasterNotInCombatCondition(abilityData.Conditions);
-        var requiresCasterInCombat = GetCasterNotInCombatCondition(abilityData.Conditions);
-        var casterBetweenPoolCondition = GetCasterBetweenPoolCondition(abilityData.Conditions);
-        var maxLevelGapBetweenCasterAndTarget = GetMaxLevelBetweenCasterAndTarget(abilityData.Conditions);
-        var requiresTargetIsAPet = GetTargetPetCondition(abilityData.Conditions);
-        var requiresCasterHasStatuses = GetCasterHasAllStatusCondition(abilityData.Conditions);
-        var requiresCasterWeaponTypes = GetCasterRequiredWeaponTypes(abilityData.Conditions);
-        var requiresCasterAtLeastPool = GetCasterAtLeastPercentPoolCondition(abilityData.Conditions);
+        var conditions = ParseConditions(abilityData.Conditions, abilityData.DisplayName);
 
         var masteryAbilityIds = new List<int>();
         foreach (var ability in abilityData.MasteryUpgrades)
@@ -102,7 +77,7 @@ public static class AbilityDataExtensions
             LoopSoundType = abilityData.LoopSoundType.ToString(),
             LoweredDesignerId = abilityData.loweredDesignerId,
             LoweredDisplayName = abilityData.loweredDisplayName,
-            MeleeMaxRange = meleeRange,
+            MeleeMaxRange = conditions.MeleeRange,
             OverridePriority = abilityData.overridePriority,
             PassiveBuffAlwaysApplied = abilityData.PassiveBuffAlwaysApplied,
             PassiveBuffAppliedWhileOffCooldown = abilityData.PassiveBuffAppliedWhileOffCooldown,
@@ -116,30 +91,30 @@ public static class AbilityDataExtensions
             TriggerGlobalCooldown = abilityData.TriggerGlobalCooldown,
             UseAllReadiness = abilityData.UseAllReadiness,
             Version = abilityData.Version,
-            MinRange = castRange?.MinRange,
-            MaxRange = castRange?.MaxRange,
-            MinLevel = levelRange?.MinLevel,
-            MaxLevel = levelRange?.MaxLevel,
-            RequiresCasterMissingStatuses = requiresCasterMissingStatuses,
-            RequiresEntityKind = targetEntityKindRestriction,
-            RequiresFacingTarget = mustFaceTarget,
-            RequiresLineOfSight = requiresLineOfSight,
-            RequiresTargetIsRezablePlayerCorpse = requiresTargetIsRezableCorpse,
-            RequiresTargetMissingStatuses = requiresTargetMissingStatus,
-            RequiresTargetMissingBuffs = requiresTargetMissingBuffs,
-            TargetMustBeAlive = targetMustBeAlive,
-            MinimumPrimaryWeaponSkill = minimumPrimaryWeaponSkill,
-            MinimumSecondaryWeaponSkill = minimumSecondaryWeaponSkill,
-            RequiresTargetInCombat = requiresTargetInCombat,
-            RequiresTargetNotInCombat = requiresTargetNotInCombat,
-            RequiresCasterInCombat = requiresCasterInCombat,
-            RequiresCasterNotInCombat = requiresCasterNotInCombat,
-            MaxLevelGapBetweenCasterAndTarget = maxLevelGapBetweenCasterAndTarget,
-            RequiresPoolWithinRange = casterBetweenPoolCondition,
-            RequiresTargetIsAPet = requiresTargetIsAPet,
-            RequiresCasterHasStatuses = requiresCasterHasStatuses,
-            RequiresCasterPrimaryWeaponTypes = requiresCasterWeaponTypes,
-            RequiresCasterAtLeastPool = requiresCasterAtLeastPool,
+            MinRange = conditions.CastRange?.MinRange,
+            MaxRange = conditions.CastRange?.MaxRange,
+            MinLevel = conditions.LevelRange?.MinLevel,
+            MaxLevel = conditions.LevelRange?.MaxLevel,
+            RequiresCasterMissingStatuses = conditions.RequiresCasterMissingStatuses,
+            RequiresEntityKind = conditions.TargetEntityKind,
+            RequiresFacingTarget = conditions.MustFaceTarget,
+            RequiresLineOfSight = conditions.RequiresLineOfSight,
+            RequiresTargetIsRezablePlayerCorpse = conditions.RequiresTargetIsRezableCorpse,
+            RequiresTargetMissingStatuses = conditions.RequiresTargetMissingStatuses,
+            RequiresTargetMissingBuffs = conditions.RequiresTargetMissingBuffs,
+            TargetMustBeAlive = conditions.TargetMustBeAlive,
+            MinimumPrimaryWeaponSkill = conditions.MinimumPrimaryWeaponSkill,
+            MinimumSecondaryWeaponSkill = conditions.MinimumSecondaryWeaponSkill,
+            RequiresTargetInCombat = conditions.RequiresTargetInCombat,
+            RequiresTargetNotInCombat = conditions.RequiresTargetNotInCombat,
+            RequiresCasterInCombat = conditions.RequiresCasterInCombat,
+            RequiresCasterNotInCombat = conditions.RequiresCasterNotInCombat,
+            MaxLevelGapBetweenCasterAndTarget = conditions.MaxLevelGap,
+            RequiresPoolWithinRange = conditions.CasterBetweenPool,
+            RequiresTargetIsAPet = conditions.RequiresTargetIsAPet,
+            RequiresCasterHasStatuses = conditions.RequiresCasterHasStatuses,
+            RequiresCasterPrimaryWeaponTypes = conditions.RequiresCasterPrimaryWeaponTypes,
+            RequiresCasterAtLeastPool = conditions.RequiresCasterAtLeastPool,
             MasteryAbilities = masteryAbilityIds.ToArray(),
             BaseAbilityId = abilityData.baseAbility?.Id
         };
@@ -156,223 +131,6 @@ public static class AbilityDataExtensions
         };
     }
 
-    private static bool GetTargetPetCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            if (condition.TryCast<TargetIsPetCondition>() != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private static int? GetMaxLevelBetweenCasterAndTarget(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var maxLevelCondition = condition.TryCast<MaxLevelGapBetweenCasterAndTargetCondition>();
-            if (maxLevelCondition != null)
-            {
-                return maxLevelCondition.MaxLevelGap;
-            }
-        }
-        
-        return null;
-    }
-
-    private static AbilityPoolBetweenConditionData? GetCasterBetweenPoolCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var casterCondition = condition.TryCast<CasterBetweenPercentPoolCondition>();
-            if (casterCondition != null)
-            {
-                return new AbilityPoolBetweenConditionData
-                {
-                    MaxPercent = casterCondition.MaxPercent,
-                    PoolType = casterCondition.PoolType.ToString(),
-                    MinPercent = casterCondition.MinPercent,
-                };
-            }
-        }
-
-        return null;
-    }
-
-    private static bool GetCasterNotInCombatCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var casterCondition = condition.TryCast<CasterIsNotInCombat>();
-            if (casterCondition != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private static bool GetTargetNotInCombatCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var notInCombatCondition = condition.TryCast<TargetIsNotInCombat>();
-            if (notInCombatCondition != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private static bool GetTargetInCombatCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var inCombatCondition = condition.TryCast<TargetIsInCombat>();
-            if (inCombatCondition != null)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static float? GetMeleeRange(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var meleeCondition = condition.TryCast<CasterIsWithinMeleeDistanceToTargetCondition>();
-            if (meleeCondition != null)
-            {
-                return meleeCondition.MaxRange;
-            }
-        }
-        
-        return null;
-    }
-
-    private static bool GetTargetIsRezableCorpse(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            if (condition.TryCast<TargetIsRezablePlayerCorpseCondition>() != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    private static string[] GetCasterMissingStatusRequirement(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var missingStatusCondition = condition.TryCast<CasterHasNoStatusCondition>();
-            if (missingStatusCondition != null)
-            {
-                var list = new List<string>();
-                foreach (var status in missingStatusCondition.StatusTypes)
-                {
-                    list.Add(status.ToString());
-                }
-
-                return list.ToArray();
-            }
-        }
-        
-        return Array.Empty<string>();
-    }
-
-    private static int[] GetMissingBuffsRequirement(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        // NB: Unlike other conditions, abilities can have multiple of this one for some reason
-        var list = new List<int>();
-        foreach (var condition in conditions)
-        {
-            var missingBuffCondition = condition.TryCast<TargetMissingBuffCondition>();
-            if (missingBuffCondition != null)
-            {
-                list.Add(missingBuffCondition.Buff.BuffId);
-            }
-        }
-
-        return list.ToArray();
-    }
-
-    private static string[] GetMissingStatusRequirement(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var missingStatusCondition = condition.TryCast<TargetHasNoStatusCondition>();
-
-            if (missingStatusCondition == null)
-            {
-                continue;
-            }
-            
-            var list = new List<string>();
-            foreach (var status in missingStatusCondition.StatusTypes)
-            {
-                list.Add(status.ToString());
-            }
-
-            return list.ToArray();
-        }
-        
-        return Array.Empty<string>();
-    }
-
-    private static int? GetMinimumPrimaryWeaponSkill(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var minimumPrimaryWeaponSkillCondition = condition.TryCast<CasterPrimaryWeaponSkillLevelIsAtLeast>();
-
-            if (minimumPrimaryWeaponSkillCondition != null)
-            {
-                return minimumPrimaryWeaponSkillCondition.Min;
-            }
-        }
-
-        return null;
-    }
-    
-    private static int? GetMinimumSecondaryWeaponSkill(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var minimumPrimaryWeaponSkillCondition = condition.TryCast<CasterSecondaryWeaponSkillLevelIsAtLeast>();
-
-            if (minimumPrimaryWeaponSkillCondition != null)
-            {
-                return minimumPrimaryWeaponSkillCondition.Min;
-            }
-        }
-
-        return null;
-    }
-
-    private static bool GetMustFaceTargetCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            if (condition.TryCast<CasterIsFacingTargetCondition>() != null)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private static AbilityCostData[] GetCosts(Il2CppSystem.Collections.Generic.List<AbilityCost> costs)
     {
         var list = new List<AbilityCostData>();
@@ -387,7 +145,7 @@ public static class AbilityDataExtensions
                 DontSubtractWhenCast = cost.DontSubtractWhenCast
             });
         }
-        
+
         return list.ToArray();
     }
 
@@ -403,146 +161,162 @@ public static class AbilityDataExtensions
         return list.ToArray();
     }
 
-    private static bool GetTargetAliveCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
+    private sealed class ConditionData
     {
-        foreach (var condition in conditions)
-        {
-            if (condition.TryCast<TargetIsAliveCondition>() != null)
-            {
-                return true;
-            }
-        }
-        
-        return false;
+        public (float MinRange, float MaxRange)? CastRange;
+        public float? MeleeRange;
+        public (int MinLevel, int MaxLevel)? LevelRange;
+        public bool RequiresLineOfSight;
+        public string? TargetEntityKind;
+        public bool TargetMustBeAlive;
+        public bool MustFaceTarget;
+        public int? MinimumPrimaryWeaponSkill;
+        public int? MinimumSecondaryWeaponSkill;
+        public string[] RequiresTargetMissingStatuses = Array.Empty<string>();
+        public int[] RequiresTargetMissingBuffs = Array.Empty<int>();
+        public string[] RequiresCasterMissingStatuses = Array.Empty<string>();
+        public bool RequiresTargetIsRezableCorpse;
+        public bool RequiresTargetInCombat;
+        public bool RequiresTargetNotInCombat;
+        public bool RequiresCasterNotInCombat;
+        public bool RequiresCasterInCombat;
+        public AbilityPoolBetweenConditionData? CasterBetweenPool;
+        public int? MaxLevelGap;
+        public bool RequiresTargetIsAPet;
+        public string[] RequiresCasterHasStatuses = Array.Empty<string>();
+        public string[] RequiresCasterPrimaryWeaponTypes = Array.Empty<string>();
+        public AbilityAtLeastPoolConditionData? RequiresCasterAtLeastPool;
     }
 
-    private static string? GetTargetEntityKind(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
+    private static ConditionData ParseConditions(Il2CppSystem.Collections.Generic.List<ICondition> conditions, string abilityName)
     {
+        var data = new ConditionData();
+        var missingBuffs = new List<int>();
+
         foreach (var condition in conditions)
         {
-            var targetEntityKind = condition.TryCast<TargetIsEntityKindCondition>();
-            if (targetEntityKind != null)
+            var obj = condition.TryCast<Object>();
+            var il2cppType = obj.GetIl2CppType();
+
+            if (!KnownTypes.Contains(il2cppType))
             {
-                return targetEntityKind.eKind.ToString();
+                MelonLogger.Msg($"Ability {abilityName} contains unhandled type {il2cppType.Name}");
+                continue;
             }
-        }
-        
-        return null;
-    }
 
-    private static bool GetLineOfSightRequirement(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var lineOfSightCondition = condition.TryCast<TargetWithinLineOfSight>();
-            if (lineOfSightCondition != null)
+            if (condition.TryCast<CasterIsWithinDistanceToTargetCondition>() is { } castRange)
             {
-                return true;
+                data.CastRange = (castRange.MinRange, castRange.MaxRange);
             }
-        }
-
-        return false;
-    }
-
-    private static (int MinLevel, int MaxLevel)? GetLevelRange(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var levelCondition = condition.TryCast<CasterIsWithinLevelRange>();
-            if (levelCondition != null)
+            else if (condition.TryCast<CasterIsWithinMeleeDistanceToTargetCondition>() is { } melee)
             {
-                return ((int)levelCondition.Min, (int)levelCondition.Max);
+                data.MeleeRange = melee.MaxRange;
             }
-        }
-
-        return null;
-    }
-
-    private static string[] GetCasterHasAllStatusCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var statusCondition = condition.TryCast<CasterHasAllStatusCondition>();
-            if (statusCondition != null)
+            else if (condition.TryCast<CasterIsWithinLevelRange>() is { } levelRange)
+            {
+                data.LevelRange = ((int)levelRange.Min, (int)levelRange.Max);
+            }
+            else if (condition.TryCast<TargetWithinLineOfSight>() != null)
+            {
+                data.RequiresLineOfSight = true;
+            }
+            else if (condition.TryCast<TargetIsEntityKindCondition>() is { } entityKind)
+            {
+                data.TargetEntityKind = entityKind.eKind.ToString();
+            }
+            else if (condition.TryCast<TargetIsAliveCondition>() != null)
+            {
+                data.TargetMustBeAlive = true;
+            }
+            else if (condition.TryCast<CasterIsFacingTargetCondition>() != null)
+            {
+                data.MustFaceTarget = true;
+            }
+            else if (condition.TryCast<CasterPrimaryWeaponSkillLevelIsAtLeast>() is { } primarySkill)
+            {
+                data.MinimumPrimaryWeaponSkill = primarySkill.Min;
+            }
+            else if (condition.TryCast<CasterSecondaryWeaponSkillLevelIsAtLeast>() is { } secondarySkill)
+            {
+                data.MinimumSecondaryWeaponSkill = secondarySkill.Min;
+            }
+            else if (condition.TryCast<TargetHasNoStatusCondition>() is { } targetMissingStatus)
             {
                 var list = new List<string>();
-                foreach (var status in statusCondition.StatusTypes)
-                {
-                    list.Add(status.ToString());
-                }
-
-                return list.ToArray();
+                foreach (var status in targetMissingStatus.StatusTypes) list.Add(status.ToString());
+                data.RequiresTargetMissingStatuses = list.ToArray();
             }
-        }
-
-        return Array.Empty<string>();
-    }
-
-    private static string[] GetCasterRequiredWeaponTypes(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var weaponCondition = condition.TryCast<CasterHasPrimaryWeaponTypeList>();
-            if (weaponCondition != null)
+            else if (condition.TryCast<TargetMissingBuffCondition>() is { } missingBuff)
+            {
+                missingBuffs.Add(missingBuff.Buff.BuffId);
+            }
+            else if (condition.TryCast<CasterHasNoStatusCondition>() is { } casterMissingStatus)
             {
                 var list = new List<string>();
-                foreach (var weaponType in weaponCondition.WeaponTypes)
-                {
-                    list.Add(weaponType.ToString());
-                }
-
-                return list.ToArray();
+                foreach (var status in casterMissingStatus.StatusTypes) list.Add(status.ToString());
+                data.RequiresCasterMissingStatuses = list.ToArray();
             }
-        }
-
-        return Array.Empty<string>();
-    }
-
-    private static AbilityAtLeastPoolConditionData? GetCasterAtLeastPercentPoolCondition(Il2CppSystem.Collections.Generic.List<ICondition> conditions)
-    {
-        foreach (var condition in conditions)
-        {
-            var poolCondition = condition.TryCast<CasterHasAtLeastPercentPoolCondition>();
-            if (poolCondition != null)
+            else if (condition.TryCast<TargetIsRezablePlayerCorpseCondition>() != null)
             {
-                return new AbilityAtLeastPoolConditionData
+                data.RequiresTargetIsRezableCorpse = true;
+            }
+            else if (condition.TryCast<TargetIsInCombat>() != null)
+            {
+                data.RequiresTargetInCombat = true;
+            }
+            else if (condition.TryCast<TargetIsNotInCombat>() != null)
+            {
+                data.RequiresTargetNotInCombat = true;
+            }
+            else if (condition.TryCast<CasterIsNotInCombat>() != null)
+            {
+                data.RequiresCasterNotInCombat = true;
+            }
+            else if (condition.TryCast<CasterIsInCombat>() != null)
+            {
+                data.RequiresCasterInCombat = true;
+            }
+            else if (condition.TryCast<CasterBetweenPercentPoolCondition>() is { } betweenPool)
+            {
+                data.CasterBetweenPool = new AbilityPoolBetweenConditionData
                 {
-                    Percent = poolCondition.Percent,
-                    PoolType = poolCondition.PoolType.ToString(),
+                    MinPercent = betweenPool.MinPercent,
+                    MaxPercent = betweenPool.MaxPercent,
+                    PoolType = betweenPool.PoolType.ToString()
+                };
+            }
+            else if (condition.TryCast<MaxLevelGapBetweenCasterAndTargetCondition>() is { } levelGap)
+            {
+                data.MaxLevelGap = levelGap.MaxLevelGap;
+            }
+            else if (condition.TryCast<TargetIsPetCondition>() != null)
+            {
+                data.RequiresTargetIsAPet = true;
+            }
+            else if (condition.TryCast<CasterHasAllStatusCondition>() is { } casterHasStatuses)
+            {
+                var list = new List<string>();
+                foreach (var status in casterHasStatuses.StatusTypes) list.Add(status.ToString());
+                data.RequiresCasterHasStatuses = list.ToArray();
+            }
+            else if (condition.TryCast<CasterHasPrimaryWeaponTypeList>() is { } weaponTypes)
+            {
+                var list = new List<string>();
+                foreach (var wt in weaponTypes.WeaponTypes) list.Add(wt.ToString());
+                data.RequiresCasterPrimaryWeaponTypes = list.ToArray();
+            }
+            else if (condition.TryCast<CasterHasAtLeastPercentPoolCondition>() is { } atLeastPool)
+            {
+                data.RequiresCasterAtLeastPool = new AbilityAtLeastPoolConditionData
+                {
+                    Percent = atLeastPool.Percent,
+                    PoolType = atLeastPool.PoolType.ToString()
                 };
             }
         }
 
-        return null;
-    }
-
-    private static (float MinRange, float MaxRange)? GetCastRange(
-        Il2CppSystem.Collections.Generic.List<ICondition> abilityDataConditions)
-    {
-        foreach (var blah in abilityDataConditions)
-        {
-            var distanceCondition = blah.TryCast<CasterIsWithinDistanceToTargetCondition>();
-            if (distanceCondition != null)
-            {
-                return (distanceCondition.MinRange, distanceCondition.MaxRange);
-            }
-        }
-
-        return null;
-    }
-    
-    private static void CheckConditions(AbilityData abilityData)
-    {
-        foreach (var condition in abilityData.Conditions)
-        {
-            var obj = condition.TryCast<Object>();
-            var il2cppType = obj.GetIl2CppType();
-            
-            if (!KnownTypes.Contains(il2cppType))
-            {
-                MelonLogger.Msg($"Ability {abilityData.DisplayName} contains unhandled type {il2cppType.Name}");
-            }
-        }
+        data.RequiresTargetMissingBuffs = missingBuffs.ToArray();
+        return data;
     }
 
     private static readonly Il2CppSystem.Type[] KnownTypes = {
