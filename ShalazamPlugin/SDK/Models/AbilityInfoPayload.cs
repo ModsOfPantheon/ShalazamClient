@@ -78,6 +78,7 @@ public class AbilityInfoPayload
     public string[] RequiresCasterHasStatuses { get; set; }
     public string[] RequiresCasterPrimaryWeaponTypes { get; set; }
     public AbilityAtLeastPoolConditionData? RequiresCasterAtLeastPool { get; set; }
+    public bool RequiresCasterOrTargetLineOfSightToDefensiveTarget { get; set; }
     public int[] MasteryAbilities { get; set; }
     public int? BaseAbilityId { get; set; }
     public string ClassName { get; set; }

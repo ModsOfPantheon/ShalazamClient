@@ -115,6 +115,7 @@ public static class AbilityDataExtensions
             RequiresCasterHasStatuses = conditions.RequiresCasterHasStatuses,
             RequiresCasterPrimaryWeaponTypes = conditions.RequiresCasterPrimaryWeaponTypes,
             RequiresCasterAtLeastPool = conditions.RequiresCasterAtLeastPool,
+            RequiresCasterOrTargetLineOfSightToDefensiveTarget = conditions.RequiresCasterOrTargetLineOfSightToDefensiveTarget,
             MasteryAbilities = masteryAbilityIds.ToArray(),
             BaseAbilityId = abilityData.baseAbility?.Id
         };
@@ -186,6 +187,7 @@ public static class AbilityDataExtensions
         public string[] RequiresCasterHasStatuses = Array.Empty<string>();
         public string[] RequiresCasterPrimaryWeaponTypes = Array.Empty<string>();
         public AbilityAtLeastPoolConditionData? RequiresCasterAtLeastPool;
+        public bool RequiresCasterOrTargetLineOfSightToDefensiveTarget;
     }
 
     private static ConditionData ParseConditions(Il2CppSystem.Collections.Generic.List<ICondition> conditions, string abilityName)
@@ -313,6 +315,10 @@ public static class AbilityDataExtensions
                     PoolType = atLeastPool.PoolType.ToString()
                 };
             }
+            else if (condition.TryCast<CasterOrTargetHasLineOfSightToCastersDefensiveTarget>() != null)
+            {
+                data.RequiresCasterOrTargetLineOfSightToDefensiveTarget = true;
+            }
         }
 
         data.RequiresTargetMissingBuffs = missingBuffs.ToArray();
@@ -342,6 +348,7 @@ public static class AbilityDataExtensions
         Il2CppType.Of<TargetIsPetCondition>(),
         Il2CppType.Of<CasterHasAllStatusCondition>(),
         Il2CppType.Of<CasterHasPrimaryWeaponTypeList>(),
-        Il2CppType.Of<CasterHasAtLeastPercentPoolCondition>()
+        Il2CppType.Of<CasterHasAtLeastPercentPoolCondition>(),
+        Il2CppType.Of<CasterOrTargetHasLineOfSightToCastersDefensiveTarget>()
     };
 }
