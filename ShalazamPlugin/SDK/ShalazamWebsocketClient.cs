@@ -151,13 +151,19 @@ public class ShalazamWebsocketClient : IShalazamClient
             return;
         }
 
+        var validItems = itemsDropped.Where(x => x?.Template != null).ToList();
+        if (validItems.Count == 0)
+        {
+            return;
+        }
+
         var payload = new DropPayload
         {
             Drop = new DropBody
             {
                 MonsterName = entityNpcGameObject.info.DisplayName,
                 Source = isSkinning ? "skinning" : "kill",
-                Items = itemsDropped.Select(x => new ItemDrop
+                Items = validItems.Select(x => new ItemDrop
                 {
                     Id = x.Template.ItemId,
                     Name = x.Template.ItemName
