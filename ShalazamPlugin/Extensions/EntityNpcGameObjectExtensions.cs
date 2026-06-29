@@ -30,6 +30,7 @@ public static class EntityNpcGameObjectExtensions
                     Class = info.Class.ToString(),
                     Tier = info.Tier.ToString(),
                     Level = entityNpcGameObject.Experience.Level,
+                    Hour = TimeController.previousHour,
                     MaxHp = (int)entityNpcGameObject.Pools.GetPool(PoolType.Health).Max,
                     TrackRadius = MathF.Round(entityNpcGameObject.Tracking.GetTrackingRadius(), 2),
                     Zone = zone,
