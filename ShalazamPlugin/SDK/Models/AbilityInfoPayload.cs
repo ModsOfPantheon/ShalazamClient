@@ -82,4 +82,28 @@ public class AbilityInfoPayload
     public int[] MasteryAbilities { get; set; }
     public int? BaseAbilityId { get; set; }
     public string ClassName { get; set; }
+    public AbilityPoolBetweenConditionData? RequiresTargetBetweenPool { get; set; }
+    public string? RequiresTargetHasPoolType { get; set; }
+    public bool RequiresCasterHasAnyShieldEquipped { get; set; }
+    public bool RequiresCasterHasAnySecondaryWeapon { get; set; }
+    public bool RequiresTargetIsNotSelf { get; set; }
+    public bool RequiresTargetIsNotFteClaimedByOthers { get; set; }
+    public bool RequiresCasterOutOfCombatToggleEnabled { get; set; }
+    public bool RequiresTargetCastingInterruptibleAbility { get; set; }
+    public string[] RequiresTargetHasAnyStatuses { get; set; }
+    public string[] RequiresTargetHasAllStatuses { get; set; }
+    public AbilityBuffConditionData[] RequiresCasterHasBuffs { get; set; }
+    public int[] RequiresCasterMissingBuffs { get; set; }
+    public int[] RequiresCasterHasAnyBuffInGroups { get; set; }
+    public int[] RequiresTargetHasAnyBuffInGroups { get; set; }
+    public AbilityItemConditionData[] RequiresCasterHasItems { get; set; }
+    public AbilityKnownConditionData? RequiresCasterHasAbilityMemorized { get; set; }
+    public AbilityKnownConditionData? RequiresCasterAbilityNotOnCooldown { get; set; }
+    public float? CasterAboveTargetHeightDifference { get; set; }
+    public float? MaxVerticalHeightDifferenceToTarget { get; set; }
+    public AbilityRangeConditionData? CastStartRange { get; set; }
+    public AbilityRangeConditionData? LongTermPositionRange { get; set; }
+    public int? TargetMinLevel { get; set; }
+    public int? TargetMaxLevel { get; set; }
+    public string? RequiresCasterCombatPosition { get; set; }
 }
