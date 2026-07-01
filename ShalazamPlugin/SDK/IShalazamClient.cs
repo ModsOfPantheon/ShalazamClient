@@ -15,6 +15,7 @@ public interface IShalazamClient
     public void PostMonster(EntityNpcGameObject entityNpcGameObject);
 
     public void PostItem(Item item);
+    public void PostItemTemplate(ItemTemplate template);
     public void PostAbility(AbilityData ability);
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped);
     public void PostNpc(EntityNpcGameObject entityNpcGameObject);

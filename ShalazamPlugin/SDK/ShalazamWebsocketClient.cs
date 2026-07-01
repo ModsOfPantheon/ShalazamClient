@@ -89,6 +89,16 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(item.ToItemPayload());
     }
 
+    public void PostItemTemplate(ItemTemplate template)
+    {
+        if (!_roles.Contains(Permissions.CreateItem))
+        {
+            return;
+        }
+
+        PostRequest(template.ToItemPayload());
+    }
+
     public void PostAbility(AbilityData ability)
     {
         if (!_roles.Contains(Permissions.CreateAbility))

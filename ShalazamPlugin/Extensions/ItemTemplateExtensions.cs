@@ -9,10 +9,18 @@ namespace ShalazamPlugin.Extensions;
 
 public static class ItemExtensions
 {
+    // An Item instance carries the same ItemTemplate the tooltip renders from, so the bulk of the
+    // payload is built off the template. The only instance-specific data is the rolled stat modifiers,
+    // which we overlay on top of the template's (see BuildInstanceStatModifiers).
     public static ItemPayload ToItemPayload(this Item item)
     {
-        var template = item.Template;
-        
+        var payload = item.Template.ToItemPayload();
+        payload.Item.Data.StatModifiers = BuildInstanceStatModifiers(item);
+        return payload;
+    }
+
+    public static ItemPayload ToItemPayload(this ItemTemplate template)
+    {
         // This is so hacky...
         // Github issue tracking the reason for this: https://github.com/BepInEx/Il2CppInterop/issues/182
         StatType? secondaryBonus = null;
@@ -117,7 +125,7 @@ public static class ItemExtensions
             RequiredLevel = template.RequiredLevel,
             SkillEffectiveness = skillEffectiveness,
             RequirementOverrides = template.RequirementOverrides?.Select(ToRequirementOverride),
-            StatModifiers = null,
+            StatModifiers = BuildTemplateStatModifiers(template),
             UseAnimation = useAnimation?.ToString(),
             UseSeconds = useSeconds,
             UseRestrictions = template.UseRestrictions,
@@ -138,29 +146,6 @@ public static class ItemExtensions
             MaxStackSizeOrCharges = template.MaxStackSizeOrCharges,
             CachedRecipeCraftingSlots = template.CachedRecipeCraftingSlots?.Select(ToCraftingSlot)
         };
-        
-        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
-        foreach (var statModifier in item.statModifiers.ToArray())
-        {
-            // Hacky fix for il2cppinterop bug
-            var rawData = new Il2CppStructArray<byte>(17);
-            Marshal.Copy(statModifier.Pointer, rawData, 0, rawData.Length);
-
-            var statType = rawData.Last();
-                        
-            var mod = statModifier.Item2;
-            var value = mod.Value;
-            var modifierType = mod.ModifierType;
-
-            statModifiersList.Add(new ItemInfoPayloadStatModifier
-            {
-                Stat = ((StatType)statType).ToString(),
-                ModifierType = modifierType.ToString(),
-                Amount = value
-            });
-        }
-        
-        itemData.StatModifiers = statModifiersList;
 
         return new ItemPayload
         {
@@ -172,6 +157,64 @@ public static class ItemExtensions
             },
             Type = "item"
         };
+    }
+
+    // Instance-rolled stat modifiers off a live Item. Item1 (StatType) can't be read directly due to an
+    // il2cppinterop unboxing bug, so we marshal the raw struct and read the enum out of the last byte.
+    private static List<ItemInfoPayloadStatModifier> BuildInstanceStatModifiers(Item item)
+    {
+        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
+        foreach (var statModifier in item.statModifiers.ToArray())
+        {
+            // Hacky fix for il2cppinterop bug
+            var rawData = new Il2CppStructArray<byte>(17);
+            Marshal.Copy(statModifier.Pointer, rawData, 0, rawData.Length);
+
+            var statType = rawData.Last();
+
+            var mod = statModifier.Item2;
+            var value = mod.Value;
+            var modifierType = mod.ModifierType;
+
+            statModifiersList.Add(new ItemInfoPayloadStatModifier
+            {
+                Stat = ((StatType)statType).ToString(),
+                ModifierType = modifierType.ToString(),
+                Amount = value
+            });
+        }
+
+        return statModifiersList;
+    }
+
+    // Template-level stat modifiers, used when we only have an ItemTemplate (e.g. quest rewards, where no
+    // Item instance exists). StatModifier is a reference type with proper getters, so no marshal hack needed.
+    private static List<ItemInfoPayloadStatModifier> BuildTemplateStatModifiers(ItemTemplate template)
+    {
+        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
+
+        var mods = template.StatModifiers;
+        if (mods == null)
+        {
+            return statModifiersList;
+        }
+
+        foreach (var mod in mods)
+        {
+            if (mod == null)
+            {
+                continue;
+            }
+
+            statModifiersList.Add(new ItemInfoPayloadStatModifier
+            {
+                Stat = mod.Stat.ToString(),
+                ModifierType = mod.ModifierType.ToString(),
+                Amount = mod.Amount
+            });
+        }
+
+        return statModifiersList;
     }
 
     private static ItemRequirementOverride ToRequirementOverride(SkillUnlock.ClassOverride classOverride)
