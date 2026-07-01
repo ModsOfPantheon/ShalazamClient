@@ -25,7 +25,7 @@ public static class LootCache
             MelonLogger.Msg("Skipping as we've seen this loot before");
             return;
         }
-        
+
         if (isSkinning)
         {
             SeenSkinnedLoot.Add(entityNpcGameObject.NetworkId);
@@ -34,7 +34,7 @@ public static class LootCache
         {
             SeenNonSkinnedLoot.Add(entityNpcGameObject.NetworkId);
         }
-        
+
         ModMain.ShalazamClient.PostDrops(entityNpcGameObject, isSkinning || SeenSkinnedLoot.Contains(entityNpcGameObject.NetworkId), itemsDropped);
     }
 
@@ -42,26 +42,20 @@ public static class LootCache
     {
         if (itemsDropped == null)
         {
-            MelonLogger.Msg("[ShalazamItem] Loot: itemsDropped was null, nothing to scan");
             return;
         }
 
         try
         {
-            var scanned = 0;
             foreach (var item in itemsDropped)
             {
                 if (item?.Template == null)
                 {
-                    MelonLogger.Msg("[ShalazamItem] Loot: skipping loot entry with null Item/Template");
                     continue;
                 }
 
-                scanned++;
-                ItemCache.OnItemSeen(item, "Loot");
+                ItemCache.OnItemSeen(item);
             }
-
-            MelonLogger.Msg($"[ShalazamItem] Loot: scanned {scanned} item(s) in the loot window");
         }
         catch (Exception ex)
         {

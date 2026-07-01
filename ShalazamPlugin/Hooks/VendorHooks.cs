@@ -24,7 +24,7 @@ public class VendorUIRefreshHook
             foreach (var vi in items)
             {
                 if (vi.Item != null)
-                    ItemCache.OnItemAdded(vi.Item, default);
+                    ItemCache.OnItemSeen(vi.Item);
             }
 
             if (npcGameObject == null || !SeenVendors.Add(npcGameObject.NetworkId.Value)) return;

@@ -35,7 +35,7 @@ public class QuestJournalSelectHook
                     continue;
                 }
 
-                ItemCache.OnItemSeen(item, "QuestJournal.SelectQuestId");
+                ItemCache.OnItemSeen(item);
             }
         }
         catch (Exception ex)

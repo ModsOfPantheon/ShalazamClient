@@ -1,5 +1,4 @@
 using Il2Cpp;
-using MelonLoader;
 
 namespace ShalazamPlugin;
 
@@ -32,9 +31,9 @@ public static class ItemCache
         ModMain.ShalazamClient.PostItem(item);
     }
 
-    // Like OnItemAdded, but for Item instances discovered outside inventory (e.g. quest reward slots),
-    // with logging so we can watch which source captured what.
-    public static void OnItemSeen(Item item, string source)
+    // Like OnItemAdded, but for Item instances discovered outside inventory (e.g. loot windows, quest
+    // reward slots).
+    public static void OnItemSeen(Item item)
     {
         if (item?.Template == null)
         {
@@ -43,11 +42,9 @@ public static class ItemCache
 
         if (!SeenItemIds.Add(item.Template.ItemId))
         {
-            MelonLogger.Msg($"[ShalazamItem] {source}: item {item.Template.ItemId} ({item.Template.ItemName}) already cached, skipping");
             return;
         }
 
-        MelonLogger.Msg($"[ShalazamItem] {source}: uploading item {item.Template.ItemId} ({item.Template.ItemName})");
         ModMain.ShalazamClient.PostItem(item);
     }
 }
