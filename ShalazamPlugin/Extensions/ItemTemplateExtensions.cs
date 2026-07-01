@@ -9,10 +9,14 @@ namespace ShalazamPlugin.Extensions;
 
 public static class ItemExtensions
 {
+    // Most of the payload comes off item.Template (the shared definition); the stat modifiers are the one
+    // piece that only exists on the live instance (item.statModifiers), so they're read separately. The
+    // template's own StatModifiers array is always null on the client, which is why we can't work from a
+    // bare ItemTemplate.
     public static ItemPayload ToItemPayload(this Item item)
     {
         var template = item.Template;
-        
+
         // This is so hacky...
         // Github issue tracking the reason for this: https://github.com/BepInEx/Il2CppInterop/issues/182
         StatType? secondaryBonus = null;
@@ -117,7 +121,7 @@ public static class ItemExtensions
             RequiredLevel = template.RequiredLevel,
             SkillEffectiveness = skillEffectiveness,
             RequirementOverrides = template.RequirementOverrides?.Select(ToRequirementOverride),
-            StatModifiers = null,
+            StatModifiers = BuildInstanceStatModifiers(item),
             UseAnimation = useAnimation?.ToString(),
             UseSeconds = useSeconds,
             UseRestrictions = template.UseRestrictions,
@@ -138,29 +142,6 @@ public static class ItemExtensions
             MaxStackSizeOrCharges = template.MaxStackSizeOrCharges,
             CachedRecipeCraftingSlots = template.CachedRecipeCraftingSlots?.Select(ToCraftingSlot)
         };
-        
-        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
-        foreach (var statModifier in item.statModifiers.ToArray())
-        {
-            // Hacky fix for il2cppinterop bug
-            var rawData = new Il2CppStructArray<byte>(17);
-            Marshal.Copy(statModifier.Pointer, rawData, 0, rawData.Length);
-
-            var statType = rawData.Last();
-                        
-            var mod = statModifier.Item2;
-            var value = mod.Value;
-            var modifierType = mod.ModifierType;
-
-            statModifiersList.Add(new ItemInfoPayloadStatModifier
-            {
-                Stat = ((StatType)statType).ToString(),
-                ModifierType = modifierType.ToString(),
-                Amount = value
-            });
-        }
-        
-        itemData.StatModifiers = statModifiersList;
 
         return new ItemPayload
         {
@@ -172,6 +153,34 @@ public static class ItemExtensions
             },
             Type = "item"
         };
+    }
+
+    // Instance-rolled stat modifiers off a live Item. Item1 (StatType) can't be read directly due to an
+    // il2cppinterop unboxing bug, so we marshal the raw struct and read the enum out of the last byte.
+    private static List<ItemInfoPayloadStatModifier> BuildInstanceStatModifiers(Item item)
+    {
+        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
+        foreach (var statModifier in item.statModifiers.ToArray())
+        {
+            // Hacky fix for il2cppinterop bug
+            var rawData = new Il2CppStructArray<byte>(17);
+            Marshal.Copy(statModifier.Pointer, rawData, 0, rawData.Length);
+
+            var statType = rawData.Last();
+
+            var mod = statModifier.Item2;
+            var value = mod.Value;
+            var modifierType = mod.ModifierType;
+
+            statModifiersList.Add(new ItemInfoPayloadStatModifier
+            {
+                Stat = ((StatType)statType).ToString(),
+                ModifierType = modifierType.ToString(),
+                Amount = value
+            });
+        }
+
+        return statModifiersList;
     }
 
     private static ItemRequirementOverride ToRequirementOverride(SkillUnlock.ClassOverride classOverride)

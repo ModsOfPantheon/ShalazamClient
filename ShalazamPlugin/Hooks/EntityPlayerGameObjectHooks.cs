@@ -18,8 +18,10 @@ public class PlayerNetworkStart
         if (__instance.NetworkId.Value == EntityPlayerGameObject.LocalPlayerId.Value && Globals.LocalPlayer == null)
         {
             Globals.LocalPlayer = __instance;
-            Globals.LocalPlayer.Inventory.add_ItemAddedEvent(new Action<Item, InventoryWithPersyst.AddFlags>(ItemCache.OnItemAdded));
-            Globals.LocalPlayer.Inventory.add_ItemStackSizeChangedEvent(new Action<Item, int, int>(ItemCache.OnItemStackSizeChanged));
+            Globals.LocalPlayer.Inventory.add_ItemAddedEvent(new Action<Item, InventoryWithPersyst.AddFlags>((item, _) => ItemCache.OnItemSeen(item)));
+            // The stack-size args aren't unboxed correctly by il2cppinterop (they come back as memory
+            // addresses), so we ignore them and just treat it as another sighting of the item.
+            Globals.LocalPlayer.Inventory.add_ItemStackSizeChangedEvent(new Action<Item, int, int>((item, _, _) => ItemCache.OnItemSeen(item)));
         }
         
         EntityManager.OnPlayerAdded(__instance);

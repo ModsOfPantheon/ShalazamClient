@@ -10,7 +10,7 @@ namespace ShalazamPlugin;
 public class ModMain : MelonMod
 {
     public static IShalazamClient ShalazamClient;
-    
+
     public override void OnInitializeMelon()
     {
         var category = MelonPreferences.CreateCategory("ShalazamApi");
@@ -18,9 +18,9 @@ public class ModMain : MelonMod
         Globals.MinimumTrackingDistance = category.CreateEntry("MinimumTrackingDistance", 3f).Value;
 
         category.SaveToFile(false);
-        
+
         EntityManager.SetApiKey(apiKey.Value);
-        
+
         // Having this isn't very useful because there is no event fired when someone saves the config file
         ShalazamClient = new ShalazamWebsocketClient(apiKey.Value);
     }
@@ -37,7 +37,7 @@ public class ModMain : MelonMod
         }
 
         var currentTargetPos = Globals.TrackedOffensiveEntity.transform.position;
-        
+
         if (Globals._lastPosition == null)
         {
             Globals._lastPosition = Globals.TrackedOffensiveEntity.transform.position;
@@ -52,7 +52,7 @@ public class ModMain : MelonMod
             Globals._lastPosition = currentTargetPos;
         }
     }
-    
+
     public static void TrackOffensiveTarget()
     {
         if (Globals.LocalPlayer == null)
@@ -78,10 +78,10 @@ public class ModMain : MelonMod
             UIChatWindows.Instance.PassMessage($"Can't track {targetEntity.info.DisplayName} because they are not a monster", ChatChannelType.Info);
             return;
         }
-        
+
         Globals.TrackedOffensiveEntity = targetEntity;
         Globals._lastPosition = null;
-        
+
         UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
     }
 
@@ -91,10 +91,10 @@ public class ModMain : MelonMod
         {
             return;
         }
-        
+
         Globals.TrackedOffensiveEntity = null;
         Globals._lastPosition = null;
-        
+
         UIChatWindows.Instance.PassMessage("Stopped tracking offensive target", ChatChannelType.Info);
     }
 
@@ -136,5 +136,5 @@ public class ModMain : MelonMod
             $"Shalazam: queued {posted} abilities for upload ({failed} failed)", ChatChannelType.Info);
     }
 
-    public const string PluginVersion = "2.5.0";
+    public const string PluginVersion = "2026.07.01";
 }
