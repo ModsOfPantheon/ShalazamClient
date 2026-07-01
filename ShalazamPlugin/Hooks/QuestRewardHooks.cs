@@ -4,21 +4,15 @@ using MelonLoader;
 
 namespace ShalazamPlugin.Hooks;
 
-// Two complementary ways of catching quest reward item templates so we can compare them in the console:
+// Captures quest reward items when you pick a quest in the journal. Reads the resolved Item off each
+// populated reward slot and routes it through ItemCache (shared dedup with normal item uploads).
 //
-//  1. QuestJournalSelectHook — fires when you pick a quest in the journal (matches "made visible in the UI").
-//     Reads the resolved Item off each populated reward slot. We deliberately avoid touching
-//     FormattedQuestRewards here: RefreshQuestRewards takes a `FormattedQuestRewards&` by-ref struct
-//     (crashes Il2CppInterop's Harmony DMD, per MasteryHooks), and pulling FormattedQuestItem values out
-//     of the struct means unwrapping Il2CppSystem.Nullable<struct>, which faults with an
-//     AccessViolation. The reward slots only ever hold reference-typed Items, which are safe to read.
-//
-//  2. QuestRewardAddItemHook — the lower-level per-item chokepoint. Fires whenever a reward item is added
-//     to a FormattedQuestRewards (e.g. NPC quest previews the journal hook won't see), handing us the
-//     ItemTemplate directly. In practice the journal path already has a materialised Item, so this mostly
-//     backstops sources that don't.
-//
-// Both funnel into ItemCache, which shares one dedup cache with normal item uploads.
+// We deliberately work off the reward slots' materialised Item rather than FormattedQuestRewards:
+// RefreshQuestRewards takes a `FormattedQuestRewards&` by-ref struct (crashes Il2CppInterop's Harmony DMD,
+// per MasteryHooks), and pulling FormattedQuestItem values out of the struct means unwrapping
+// Il2CppSystem.Nullable<struct>, which faults with an AccessViolation. Reference-typed Items are safe to
+// read, and — crucially — only the Item carries the stat modifiers (ItemTemplate.StatModifiers is always
+// null on the client), so the Item is the only source that uploads complete data.
 
 [HarmonyPatch(typeof(UIQuestJournal), nameof(UIQuestJournal.SelectQuestId))]
 public class QuestJournalSelectHook
@@ -47,27 +41,6 @@ public class QuestJournalSelectHook
         catch (Exception ex)
         {
             MelonLogger.Warning($"[ShalazamItem] QuestJournal.SelectQuestId hook error: {ex.Message}");
-        }
-    }
-}
-
-[HarmonyPatch(typeof(FormattedQuestRewards), nameof(FormattedQuestRewards.AddItem))]
-public class QuestRewardAddItemHook
-{
-    private static void Postfix(ItemTemplate template)
-    {
-        try
-        {
-            if (template == null)
-            {
-                return;
-            }
-
-            ItemCache.OnItemTemplateSeen(template, "FormattedQuestRewards.AddItem");
-        }
-        catch (Exception ex)
-        {
-            MelonLogger.Warning($"[ShalazamItem] FormattedQuestRewards.AddItem hook error: {ex.Message}");
         }
     }
 }

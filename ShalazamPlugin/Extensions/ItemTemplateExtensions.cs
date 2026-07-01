@@ -9,18 +9,14 @@ namespace ShalazamPlugin.Extensions;
 
 public static class ItemExtensions
 {
-    // An Item instance carries the same ItemTemplate the tooltip renders from, so the bulk of the
-    // payload is built off the template. The only instance-specific data is the rolled stat modifiers,
-    // which we overlay on top of the template's (see BuildInstanceStatModifiers).
+    // Most of the payload comes off item.Template (the shared definition); the stat modifiers are the one
+    // piece that only exists on the live instance (item.statModifiers), so they're read separately. The
+    // template's own StatModifiers array is always null on the client, which is why we can't work from a
+    // bare ItemTemplate.
     public static ItemPayload ToItemPayload(this Item item)
     {
-        var payload = item.Template.ToItemPayload();
-        payload.Item.Data.StatModifiers = BuildInstanceStatModifiers(item);
-        return payload;
-    }
+        var template = item.Template;
 
-    public static ItemPayload ToItemPayload(this ItemTemplate template)
-    {
         // This is so hacky...
         // Github issue tracking the reason for this: https://github.com/BepInEx/Il2CppInterop/issues/182
         StatType? secondaryBonus = null;
@@ -125,7 +121,7 @@ public static class ItemExtensions
             RequiredLevel = template.RequiredLevel,
             SkillEffectiveness = skillEffectiveness,
             RequirementOverrides = template.RequirementOverrides?.Select(ToRequirementOverride),
-            StatModifiers = BuildTemplateStatModifiers(template),
+            StatModifiers = BuildInstanceStatModifiers(item),
             UseAnimation = useAnimation?.ToString(),
             UseSeconds = useSeconds,
             UseRestrictions = template.UseRestrictions,
@@ -181,36 +177,6 @@ public static class ItemExtensions
                 Stat = ((StatType)statType).ToString(),
                 ModifierType = modifierType.ToString(),
                 Amount = value
-            });
-        }
-
-        return statModifiersList;
-    }
-
-    // Template-level stat modifiers, used when we only have an ItemTemplate (e.g. quest rewards, where no
-    // Item instance exists). StatModifier is a reference type with proper getters, so no marshal hack needed.
-    private static List<ItemInfoPayloadStatModifier> BuildTemplateStatModifiers(ItemTemplate template)
-    {
-        var statModifiersList = new List<ItemInfoPayloadStatModifier>();
-
-        var mods = template.StatModifiers;
-        if (mods == null)
-        {
-            return statModifiersList;
-        }
-
-        foreach (var mod in mods)
-        {
-            if (mod == null)
-            {
-                continue;
-            }
-
-            statModifiersList.Add(new ItemInfoPayloadStatModifier
-            {
-                Stat = mod.Stat.ToString(),
-                ModifierType = mod.ModifierType.ToString(),
-                Amount = mod.Amount
             });
         }
 
