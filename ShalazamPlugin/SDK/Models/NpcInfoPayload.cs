@@ -6,9 +6,14 @@ public class NpcInfoPayload
     public string? Title { get; set; }
     public string Kind { get; set; }
     public string Profession { get; set; }
+    public string? Role { get; set; }
+    public string? Gender { get; set; }
     public string? Race { get; set; }
     public string? Class { get; set; }
     public string? Tier { get; set; }
+    public bool PetMaster { get; set; }
+    public bool SubNameOn { get; set; }
+    public string? SubNameText { get; set; }
     public int Level { get; set; }
     public int Hour { get; set; }
     public int MaxHp { get; set; }

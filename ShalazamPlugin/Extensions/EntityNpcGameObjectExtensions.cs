@@ -26,9 +26,16 @@ public static class EntityNpcGameObjectExtensions
                     Title = string.IsNullOrWhiteSpace(info.Title) ? null : info.Title,
                     Kind = info.Kind.ToString(),
                     Profession = entityNpcGameObject.Profession.ToString(),
+                    Role = info.Role.ToString(),
+                    Gender = info.Gender.ToString(),
                     Race = info.Race.ToString(),
                     Class = info.Class.ToString(),
                     Tier = info.Tier.ToString(),
+                    PetMaster = entityNpcGameObject.PetMaster != null,
+                    SubNameOn = entityNpcGameObject.Nameplate.subNameText.isActiveAndEnabled,
+                    SubNameText = string.IsNullOrWhiteSpace(entityNpcGameObject.Nameplate.subNameText.text)
+                        ? null
+                        : entityNpcGameObject.Nameplate.subNameText.text,
                     Level = entityNpcGameObject.Experience.Level,
                     Hour = TimeController.previousHour,
                     MaxHp = (int)entityNpcGameObject.Pools.GetPool(PoolType.Health).Max,
