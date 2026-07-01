@@ -11,6 +11,11 @@ public static class LootCache
 
     public static void OnLootReceived(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped)
     {
+        // Upload the full template of every item shown in the loot window, not just the ones the player
+        // picks up (those already flow through the inventory ItemAddedEvent). This runs before the per-NPC
+        // dedup below so we never skip the item scan; ItemCache dedups by ItemId, so repeat loads are cheap.
+        UploadLootItemTemplates(itemsDropped);
+
         // IsSkinning will only ever be true for the first skinning loot attempt, there is no way to reliably determine
         // the source of loot that I can find, other than checking whether the mob is skinnable at the moment the loot is generated
         if (!isSkinning && SeenNonSkinnedLoot.Contains(entityNpcGameObject.NetworkId) || SeenSkinnedLoot.Contains(entityNpcGameObject.NetworkId))
@@ -31,6 +36,37 @@ public static class LootCache
         }
         
         ModMain.ShalazamClient.PostDrops(entityNpcGameObject, isSkinning || SeenSkinnedLoot.Contains(entityNpcGameObject.NetworkId), itemsDropped);
+    }
+
+    private static void UploadLootItemTemplates(IEnumerable<Item> itemsDropped)
+    {
+        if (itemsDropped == null)
+        {
+            MelonLogger.Msg("[ShalazamItem] Loot: itemsDropped was null, nothing to scan");
+            return;
+        }
+
+        try
+        {
+            var scanned = 0;
+            foreach (var item in itemsDropped)
+            {
+                if (item?.Template == null)
+                {
+                    MelonLogger.Msg("[ShalazamItem] Loot: skipping loot entry with null Item/Template");
+                    continue;
+                }
+
+                scanned++;
+                ItemCache.OnItemSeen(item, "Loot");
+            }
+
+            MelonLogger.Msg($"[ShalazamItem] Loot: scanned {scanned} item(s) in the loot window");
+        }
+        catch (Exception ex)
+        {
+            MelonLogger.Warning($"[ShalazamItem] Loot: error scanning loot items: {ex.Message}");
+        }
     }
 
     public static void OnNpcDeleted(EntityNpcGameObject entityNpcGameObject)
