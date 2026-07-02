@@ -14,10 +14,10 @@ namespace ShalazamPlugin.Hooks;
 //      (on hail). Gives the set of quests the NPC offers, but at that point clientQuests is sparse
 //      (id + name only); the full text/rewards arrive later over the quest-info RPC.
 //
-//   2. UIItemSlot.SetItem(IEntity, Item, Int32) — fires whenever an item is placed in *any* slot. We
-//      filter to UIItemQuestRewardSlot, so it fires exactly as the quest reward panel populates — which
-//      is where reward item ids live, and by which point the popup has rendered its dialogue/currency
-//      text. We reach those by walking up from the slot to the UINpcInteractionPopup.
+//   2. UINpcInteractionPopup.Update() — watches renderingQuestId so we log the rendered quest detail
+//      (dialogue, currency, reward items off questRewardSlots) whenever the window switches quests. This
+//      fires for *every* viewed quest, including ones with no item rewards. (An earlier reward-slot
+//      SetItem hook missed no-reward quests entirely, since SetItem never fires for them.)
 //
 // Why not the obvious methods:
 //   * PlayerInteraction.InformServerOfClicked* are ViNL networking/RPC stubs — patching them caused an
@@ -103,63 +103,67 @@ public class RedrawAllQuestButtonsHook
     }
 }
 
-// Fires as the quest reward panel populates: captures reward item ids and the rendered dialogue/currency.
-[HarmonyPatch(typeof(UIItemSlot), nameof(UIItemSlot.SetItem))]
-public class QuestRewardSlotSetItemHook
+// Logs the rendered quest detail whenever the popup switches to showing a quest. We watch renderingQuestId
+// (set by the by-ref render methods we can't patch) from the popup's Update, so this fires for *every*
+// quest viewed — including quests with no item rewards, which never trigger a reward-slot fill.
+[HarmonyPatch(typeof(UINpcInteractionPopup), nameof(UINpcInteractionPopup.Update))]
+public class UINpcInteractionPopupUpdateHook
 {
-    // Dedup per (quest, item) and per-quest header so repeated redraws don't spam.
-    private static readonly HashSet<(int, int)> LoggedItems = new();
-    private static readonly HashSet<int> LoggedHeaders = new();
+    // The quest currently reflected in the rendered window; -1 = none logged yet.
+    private static int _lastRenderedQuestId = -1;
 
-    private static void Postfix(UIItemSlot __instance, Item item)
+    private static void Postfix(UINpcInteractionPopup __instance)
     {
         try
         {
-            if (item?.Template == null || __instance.TryCast<UIItemQuestRewardSlot>() == null)
+            var questId = __instance.renderingQuestId;
+            if (questId <= 0 || questId == _lastRenderedQuestId)
             {
                 return;
             }
+            _lastRenderedQuestId = questId;
 
-            var popup = __instance.GetComponentInParent<UINpcInteractionPopup>();
-            if (popup == null)
+            Log.Verbose("[ShalazamQuest] ── quest detail ──────────────");
+            Log.Verbose($"[ShalazamQuest] rendering quest #{questId}: {__instance.questName?.text}");
+
+            // GiverName on ClientQuest is empty client-side, so source the NPC from the window.
+            var npc = __instance.lastInteractingNpc?.TryCast<EntityNpcGameObject>();
+            Log.Verbose(
+                $"[ShalazamQuest]   NPC: {npc?.info?.DisplayName}   Zone: {PantheonGameClient.currentZone}");
+
+            LogText("Dialogue", __instance.dialogue?.text);
+            LogText("AcceptDialogue", __instance.questAcceptDialogue?.text);
+            LogText("TalkToNpcDialogue", __instance.questTalkToNpcDialogue?.text);
+
+            Log.Verbose(
+                $"[ShalazamQuest]   Currency reward: {__instance.platinumRewardText?.text}p {__instance.goldRewardText?.text}g {__instance.silverRewardText?.text}s {__instance.copperRewardText?.text}c");
+            Log.Verbose($"[ShalazamQuest]   XP reward: {__instance.experienceGainRewardText?.text}");
+            Log.Verbose($"[ShalazamQuest]   Reputation reward: {__instance.heartReputationRewardText?.text}");
+
+            // Reward items live on the reference-typed reward-slot Item (see header note); empty for
+            // quests with no item rewards, in which case nothing below logs.
+            var slots = __instance.questRewardSlots;
+            if (slots != null)
             {
-                return;
-            }
+                foreach (var slot in slots)
+                {
+                    var item = slot?.Item;
+                    if (item?.Template == null)
+                    {
+                        continue;
+                    }
 
-            var questId = popup.renderingQuestId;
+                    Log.Verbose(
+                        $"[ShalazamQuest]   Reward item #{item.Template.ItemId}: {item.Template.ItemName}");
 
-            if (LoggedHeaders.Add(questId))
-            {
-                Log.Verbose("[ShalazamQuest] ── reward panel ──────────────");
-                Log.Verbose($"[ShalazamQuest] rendering quest #{questId}: {popup.questName?.text}");
-
-                // GiverName on ClientQuest is empty client-side, so source the NPC from the window.
-                var npc = popup.lastInteractingNpc?.TryCast<EntityNpcGameObject>();
-                Log.Verbose(
-                    $"[ShalazamQuest]   NPC: {npc?.info?.DisplayName}   Zone: {PantheonGameClient.currentZone}");
-
-                LogText("Dialogue", popup.dialogue?.text);
-                LogText("AcceptDialogue", popup.questAcceptDialogue?.text);
-                LogText("TalkToNpcDialogue", popup.questTalkToNpcDialogue?.text);
-
-                Log.Verbose(
-                    $"[ShalazamQuest]   Currency reward: {popup.platinumRewardText?.text}p {popup.goldRewardText?.text}g {popup.silverRewardText?.text}s {popup.copperRewardText?.text}c");
-                Log.Verbose($"[ShalazamQuest]   XP reward: {popup.experienceGainRewardText?.text}");
-                Log.Verbose($"[ShalazamQuest]   Reputation reward: {popup.heartReputationRewardText?.text}");
-            }
-
-            if (LoggedItems.Add((questId, item.Template.ItemId)))
-            {
-                Log.Verbose(
-                    $"[ShalazamQuest]   Reward item #{item.Template.ItemId}: {item.Template.ItemName}");
-
-                // Upload the reward item (deduped across every source by ItemId).
-                ItemCache.OnItemSeen(item);
+                    // Upload the reward item (deduped across every source by ItemId).
+                    ItemCache.OnItemSeen(item);
+                }
             }
         }
         catch (Exception ex)
         {
-            MelonLogger.Warning($"[ShalazamQuest] reward slot hook error: {ex.Message}");
+            MelonLogger.Warning($"[ShalazamQuest] quest detail hook error: {ex.Message}");
         }
     }
 
