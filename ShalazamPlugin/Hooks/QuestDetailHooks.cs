@@ -8,16 +8,11 @@ namespace ShalazamPlugin.Hooks;
 // Logs quest details from the NPC interaction window. We'll route this to Shalazam later; for now it just
 // dumps to the log.
 //
-// Two safe hook points, both on UI MonoBehaviours with plain reference/primitive signatures:
-//
-//   1. UINpcInteractionPopup.RedrawAllQuestButtons(IEntityNpc) — fires when the NPC's quest list draws
-//      (on hail). Gives the set of quests the NPC offers, but at that point clientQuests is sparse
-//      (id + name only); the full text/rewards arrive later over the quest-info RPC.
-//
-//   2. UINpcInteractionPopup.Update() — watches renderingQuestId so we log the rendered quest detail
-//      (dialogue, currency, reward items off questRewardSlots) whenever the window switches quests. This
-//      fires for *every* viewed quest, including ones with no item rewards. (An earlier reward-slot
-//      SetItem hook missed no-reward quests entirely, since SetItem never fires for them.)
+// Hook point: UINpcInteractionPopup.Update() — a safe, no-arg MonoBehaviour method. We watch
+// renderingQuestId so we log the rendered quest detail (dialogue, currency, reward items off
+// questRewardSlots) whenever the window switches quests. This fires for *every* viewed quest, including
+// ones with no item rewards. (An earlier reward-slot SetItem hook missed no-reward quests entirely, since
+// SetItem never fires for them; and RedrawAllQuestButtons only had the sparse id+name list, not useful.)
 //
 // Why not the obvious methods:
 //   * PlayerInteraction.InformServerOfClicked* are ViNL networking/RPC stubs — patching them caused an
@@ -29,79 +24,6 @@ namespace ShalazamPlugin.Hooks;
 //   * ClientQuest.Rewards.Item0..7 are Il2CppSystem.Nullable<FormattedQuestItem> — unwrapping them faults
 //     with an AccessViolation (documented in QuestRewardHooks), so reward items must come off the
 //     reference-typed reward-slot Item instead.
-
-[HarmonyPatch(typeof(UINpcInteractionPopup), nameof(UINpcInteractionPopup.RedrawAllQuestButtons))]
-public class RedrawAllQuestButtonsHook
-{
-    // Re-log a quest when its content grows (data arrives after the initial sparse hail render).
-    private static readonly Dictionary<int, int> LoggedSignature = new();
-
-    private static void Postfix(UINpcInteractionPopup __instance, IEntityNpc npcQuestGiver)
-    {
-        try
-        {
-            var logic = (npcQuestGiver ?? __instance?.lastInteractingNpc)?.NpcQuests;
-            if (logic?.clientQuests == null)
-            {
-                return;
-            }
-
-            foreach (var quest in logic.clientQuests)
-            {
-                if (quest == null)
-                {
-                    continue;
-                }
-
-                var tasks = quest.Tasks;
-                var rewards = quest.Rewards;
-                var taskCount = tasks?.Count ?? 0;
-
-                // Signature captures how much data has loaded so we re-log once it's populated.
-                var signature = taskCount
-                    + (int)rewards.TotalCurrency
-                    + rewards.Experience
-                    + (rewards.HasAnyItems() ? 1 : 0);
-
-                if (LoggedSignature.TryGetValue(quest.QuestId, out var prev) && prev == signature)
-                {
-                    continue;
-                }
-                LoggedSignature[quest.QuestId] = signature;
-
-                Log.Verbose("[ShalazamQuest] ───────────────────────────────");
-                Log.Verbose($"[ShalazamQuest] quest #{quest.QuestId}: {quest.Name}");
-                Log.Verbose($"[ShalazamQuest]   Giver: {quest.GiverName}   Zone: {quest.Zone}");
-
-                if (!string.IsNullOrWhiteSpace(quest.AcceptText))
-                {
-                    Log.Verbose($"[ShalazamQuest]   AcceptText: {quest.AcceptText}");
-                }
-
-                if (logic.Internal_TryGetQuestDialogue(quest.QuestId, out var dialogue) &&
-                    !string.IsNullOrWhiteSpace(dialogue))
-                {
-                    Log.Verbose($"[ShalazamQuest]   Dialogue: {dialogue}");
-                }
-
-                if (tasks != null)
-                {
-                    foreach (var task in tasks)
-                    {
-                        Log.Verbose($"[ShalazamQuest]   Task: {task.Text} ({task.Progress}/{task.MaxProgress})");
-                    }
-                }
-
-                Log.Verbose(
-                    $"[ShalazamQuest]   Rewards: xp={rewards.Experience} rep={rewards.Reputation} currency={rewards.TotalCurrency} hasItems={rewards.HasAnyItems()}");
-            }
-        }
-        catch (Exception ex)
-        {
-            MelonLogger.Warning($"[ShalazamQuest] RedrawAllQuestButtons hook error: {ex.Message}");
-        }
-    }
-}
 
 // Logs the rendered quest detail whenever the popup switches to showing a quest. We watch renderingQuestId
 // (set by the by-ref render methods we can't patch) from the popup's Update, so this fires for *every*
