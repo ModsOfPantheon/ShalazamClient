@@ -16,6 +16,7 @@ public class ModMain : MelonMod
         var category = MelonPreferences.CreateCategory("ShalazamApi");
         var apiKey = category.CreateEntry<string>("ApiKey", "");
         Globals.MinimumTrackingDistance = category.CreateEntry("MinimumTrackingDistance", 3f).Value;
+        Globals.VerboseLogging = category.CreateEntry("VerboseLogging", false).Value;
 
         category.SaveToFile(false);
 
