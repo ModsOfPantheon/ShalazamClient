@@ -11,4 +11,5 @@ public static class Permissions
     public const string CreateAbility = "ability-create";
     public const string CreateNpc = "npc-create";
     public const string CreateMastery = "mastery-create";
+    public const string CreateBuff = "buff-create";
 }

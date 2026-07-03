@@ -137,5 +137,21 @@ public class ModMain : MelonMod
             $"Shalazam: queued {posted} abilities for upload ({failed} failed)", ChatChannelType.Info);
     }
 
-    public const string PluginVersion = "2026.07.01";
+    // On-demand bulk upload of every buff baked into the client build (CachedInBuildData.buffData),
+    // routed through ShalazamClient.PostBuffs. Triggered by the /shalazamuploadbuffs chat command.
+    public static void DumpBuffsFromCache()
+    {
+        var buffs = CachedInBuildData.data?.buffData;
+        if (buffs == null)
+        {
+            UIChatWindows.Instance.PassMessage("Shalazam: buff cache not loaded yet", ChatChannelType.Info);
+            return;
+        }
+
+        ShalazamClient.PostBuffs(buffs);
+
+        UIChatWindows.Instance.PassMessage("Shalazam: queued buffs for upload", ChatChannelType.Info);
+    }
+
+    public const string PluginVersion = "2026.07.03";
 }
