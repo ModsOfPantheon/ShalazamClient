@@ -44,7 +44,7 @@ public class ShalazamWebsocketClient : IShalazamClient
 
     private static Task OnDisconnect(WebSocketCloseStatus? closeStatus, string? disconnectStatusMessage)
     {
-        MelonLogger.Msg($"Oh no we disconnected :( Status {closeStatus}, arg2 {disconnectStatusMessage}");
+        MelonLogger.Warning($"Oh no we disconnected :( Status {closeStatus}, arg2 {disconnectStatusMessage}");
 
         return Task.CompletedTask;
     }
