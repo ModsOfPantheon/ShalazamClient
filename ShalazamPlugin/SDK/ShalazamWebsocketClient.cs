@@ -101,11 +101,10 @@ public class ShalazamWebsocketClient : IShalazamClient
 
     public void PostBuffs(IEnumerable<BuffData> buffs)
     {
-        // TODO: re-enable once the buff-create permission is granted server-side
-        // if (!_roles.Contains(Permissions.CreateBuff))
-        // {
-        //     return;
-        // }
+        if (!_roles.Contains(Permissions.CreateBuff))
+        {
+            return;
+        }
 
         foreach (var buff in buffs)
         {
