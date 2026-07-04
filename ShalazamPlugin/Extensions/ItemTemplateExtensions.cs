@@ -74,7 +74,7 @@ public static class ItemExtensions
         try { cachedRecipeSkillLevel = template.CachedRecipeSkillLevel?.Unbox<int>(); } catch (Exception) { }
         try { cachedRecipeSkillType = template.CachedRecipeSkillType?.Unbox<SkillType>(); } catch (Exception) { }
         try { itemMaterialTypeId = template.ItemMaterialTypeId?.Unbox<int>(); } catch (Exception) { }
-        try { damageType = template.DamageType?.Unbox<int>(); } catch (Exception ex) { }
+        try { damageType = template.DamageType?.Unbox<int>(); } catch (Exception) { }
         // ReSharper restore EmptyGeneralCatchClause
 
         var itemData = new ItemInfoPayload

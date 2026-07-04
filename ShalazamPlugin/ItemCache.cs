@@ -6,7 +6,7 @@ public static class ItemCache
 {
     // Deduplicate by ItemId across every source (inventory, vendors, loot, quest rewards) so an item we've
     // already uploaded from one place isn't re-sent when it shows up somewhere else.
-    private static readonly HashSet<int> SeenItemIds = new();
+    private static readonly HashSet<int> _seenItemIds = new();
 
     // Called for every Item we come across (inventory, vendors, loot windows, quest reward slots). Uploads
     // the first time we see a given ItemId and ignores it thereafter.
@@ -17,7 +17,7 @@ public static class ItemCache
             return;
         }
 
-        if (!SeenItemIds.Add(item.Template.ItemId))
+        if (!_seenItemIds.Add(item.Template.ItemId))
         {
             return;
         }

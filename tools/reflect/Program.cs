@@ -54,15 +54,23 @@ using var mlc = new MetadataLoadContext(resolver);
 var gameAssemblyPaths = Directory.GetFiles(il2cppDir, "*.dll")
     .Where(path => {
         var name = Path.GetFileNameWithoutExtension(path);
-        if (name == "Assembly-CSharp") return true;
-        if (!name.StartsWith("Il2Cpp")) return false;
+        if (name == "Assembly-CSharp")
+        {
+            return true;
+        }
+        if (!name.StartsWith("Il2Cpp"))
+        {
+            return false;
+        }
         // Exclude runtime infrastructure
         if (name.StartsWith("Il2CppSystem") || name.StartsWith("Il2CppMono") ||
             name.StartsWith("Il2CppInterop") || name.StartsWith("Il2CppMicrosoft") ||
             name.StartsWith("Il2CppNewtonsoft") || name.StartsWith("Il2CppTMPro") ||
             name.StartsWith("Il2CppUnityEngine") || name.StartsWith("Il2CppUnity.") ||
             name.StartsWith("Il2CppUnityStandard"))
+        {
             return false;
+        }
         return true;
     })
     .ToArray();
@@ -102,7 +110,10 @@ foreach (var typeName in typeArgs)
             .ToArray();
         if (matches.Length == 0) { Console.WriteLine($"{typeName}: NOT FOUND\n"); continue; }
         Console.WriteLine($"Exact match not found for '{typeName}'. Partial matches:");
-        foreach (var m in matches) Console.WriteLine($"  {m.FullName}");
+        foreach (var m in matches)
+        {
+            Console.WriteLine($"  {m.FullName}");
+        }
         Console.WriteLine();
         continue;
     }
@@ -113,7 +124,9 @@ foreach (var typeName in typeArgs)
         Console.WriteLine();
 
         if (showRefs)
+        {
             PrintRefs(type);
+        }
     }
 }
 
@@ -479,7 +492,7 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         var fields = type.GetFields(BindingFlags.Public | BindingFlags.Static)
             .OrderBy(f => { try { return Convert.ToInt64(f.GetRawConstantValue()); } catch { return 0L; } })
             .ToArray();
-        for (int i = 0; i < fields.Length; i++)
+        for (var i = 0; i < fields.Length; i++)
         {
             var f = fields[i];
             var branch = i == fields.Length - 1 ? "└── " : "├── ";
@@ -519,7 +532,9 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         Console.WriteLine($"{indent}{branch}[f] {FriendlyTypeName(memberType)}  {field.Name}");
 
         if (depth < maxDepth && gameType != null && !visited.Contains(gameType.FullName ?? gameType.Name))
+        {
             PrintTree(gameType, childIndent, false, depth + 1, visited);
+        }
     }
 
     foreach (var prop in props)
@@ -534,7 +549,9 @@ void PrintTree(Type type, string indent, bool isRoot, int depth, HashSet<string>
         Console.WriteLine($"{indent}{branch}{FriendlyTypeName(memberType)}  {prop.Name}");
 
         if (depth < maxDepth && gameType != null && !visited.Contains(gameType.FullName ?? gameType.Name))
+        {
             PrintTree(gameType, childIndent, false, depth + 1, visited);
+        }
     }
 
     foreach (var method in methods)
@@ -552,7 +569,7 @@ void PrintRefs(Type target)
     var targetName = target.FullName ?? target.Name;
     Console.WriteLine($"References to {target.Name}:");
 
-    bool any = false;
+    var any = false;
     foreach (var t in allTypes.Values.OrderBy(t => t.FullName))
     {
         var allFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
@@ -561,16 +578,24 @@ void PrintRefs(Type target)
         try
         {
             foreach (var f in t.GetFields(allFlags))
+            {
                 if (!f.IsSpecialName && !f.Name.EndsWith("k__BackingField") && TypeReferences(f.FieldType, targetName))
+                {
                     hits.Add($"field  {FriendlyTypeName(f.FieldType)} {f.Name}");
+                }
+            }
         }
         catch { }
 
         try
         {
             foreach (var p in t.GetProperties(allFlags))
+            {
                 if (!p.Name.EndsWith("k__BackingField") && TypeReferences(p.PropertyType, targetName))
+                {
                     hits.Add($"prop   {FriendlyTypeName(p.PropertyType)} {p.Name}");
+                }
+            }
         }
         catch { }
 
@@ -580,9 +605,13 @@ void PrintRefs(Type target)
             {
                 var parms = string.Join(", ", m.GetParameters().Select(p => $"{FriendlyTypeName(p.ParameterType)} {p.Name}"));
                 if (TypeReferences(m.ReturnType, targetName))
+                {
                     hits.Add($"return {FriendlyTypeName(m.ReturnType)} {m.Name}({parms})");
+                }
                 else if (m.GetParameters().Any(p => TypeReferences(p.ParameterType, targetName)))
+                {
                     hits.Add($"param  {FriendlyTypeName(m.ReturnType)} {m.Name}({parms})");
+                }
             }
         }
         catch { }
@@ -592,35 +621,53 @@ void PrintRefs(Type target)
             any = true;
             Console.WriteLine($"  {t.FullName}");
             foreach (var h in hits.Distinct())
+            {
                 Console.WriteLine($"    {h}");
+            }
         }
     }
 
     if (!any)
+    {
         Console.WriteLine("  (none found)");
+    }
     Console.WriteLine();
 }
 
 bool TypeReferences(Type t, string targetFullName)
 {
-    if (t.FullName == targetFullName) return true;
+    if (t.FullName == targetFullName)
+    {
+        return true;
+    }
     if (t.IsGenericType)
+    {
         return t.GetGenericArguments().Any(a => TypeReferences(a, targetFullName));
+    }
     return false;
 }
 
 Type? ResolveGameType(Type t)
 {
     var ns = t.Namespace ?? "";
-    if (!ns.StartsWith("Il2Cpp") && !ns.StartsWith("Il2CppPantheon")) return null;
-    if (ns.StartsWith("Il2CppSystem") || ns.StartsWith("Il2CppInterop") || ns.StartsWith("Il2CppMono")) return null;
+    if (!ns.StartsWith("Il2Cpp") && !ns.StartsWith("Il2CppPantheon"))
+    {
+        return null;
+    }
+    if (ns.StartsWith("Il2CppSystem") || ns.StartsWith("Il2CppInterop") || ns.StartsWith("Il2CppMono"))
+    {
+        return null;
+    }
     allTypes.TryGetValue(t.FullName ?? t.Name, out var resolved);
     return resolved;
 }
 
 string FriendlyTypeName(Type t)
 {
-    if (!t.IsGenericType) return t.Name;
+    if (!t.IsGenericType)
+    {
+        return t.Name;
+    }
     var backtick = t.Name.IndexOf('`');
     var baseName = backtick >= 0 ? t.Name[..backtick] : t.Name;
     var args = t.GetGenericArguments().Select(FriendlyTypeName);
@@ -631,11 +678,20 @@ bool IsGeneratedType(Type t)
 {
     var name = t.Name;
     // Compiler-generated: closures (<>c), async state machines (<Method>d__0), etc.
-    if (name.Contains('<') || name.Contains('>')) return true;
+    if (name.Contains('<') || name.Contains('>'))
+    {
+        return true;
+    }
     // IL2CPP / compiler internals starting with double-underscore or underscore-Private
-    if (name.StartsWith("__") || name.StartsWith("_Private")) return true;
+    if (name.StartsWith("__") || name.StartsWith("_Private"))
+    {
+        return true;
+    }
     // Nested inside a generated type (e.g. _PrivateImplementationDetails_.ValueType*)
-    if (t.DeclaringType != null && IsGeneratedType(t.DeclaringType)) return true;
+    if (t.DeclaringType != null && IsGeneratedType(t.DeclaringType))
+    {
+        return true;
+    }
     return false;
 }
 

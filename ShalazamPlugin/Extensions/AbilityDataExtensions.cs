@@ -26,7 +26,7 @@ public static class AbilityDataExtensions
             {
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             // ignored
         }
@@ -272,11 +272,11 @@ public static class AbilityDataExtensions
         foreach (var condition in conditions)
         {
             var obj = condition.TryCast<Object>();
-            var il2cppType = obj.GetIl2CppType();
+            var il2CppType = obj.GetIl2CppType();
 
-            if (!KnownTypes.Contains(il2cppType))
+            if (!_knownTypes.Contains(il2CppType))
             {
-                MelonLogger.Msg($"Ability {abilityName} contains unhandled type {il2cppType.Name}");
+                MelonLogger.Msg($"Ability {abilityName} contains unhandled type {il2CppType.Name}");
                 continue;
             }
 
@@ -319,7 +319,10 @@ public static class AbilityDataExtensions
             else if (condition.TryCast<TargetHasNoStatusCondition>() is { } targetMissingStatus)
             {
                 var list = new List<string>();
-                foreach (var status in targetMissingStatus.StatusTypes) list.Add(status.ToString());
+                foreach (var status in targetMissingStatus.StatusTypes)
+                {
+                    list.Add(status.ToString());
+                }
                 data.RequiresTargetMissingStatuses = list.ToArray();
             }
             else if (condition.TryCast<TargetMissingBuffCondition>() is { } missingBuff)
@@ -329,7 +332,10 @@ public static class AbilityDataExtensions
             else if (condition.TryCast<CasterHasNoStatusCondition>() is { } casterMissingStatus)
             {
                 var list = new List<string>();
-                foreach (var status in casterMissingStatus.StatusTypes) list.Add(status.ToString());
+                foreach (var status in casterMissingStatus.StatusTypes)
+                {
+                    list.Add(status.ToString());
+                }
                 data.RequiresCasterMissingStatuses = list.ToArray();
             }
             else if (condition.TryCast<TargetIsRezablePlayerCorpseCondition>() != null)
@@ -372,13 +378,19 @@ public static class AbilityDataExtensions
             else if (condition.TryCast<CasterHasAllStatusCondition>() is { } casterHasStatuses)
             {
                 var list = new List<string>();
-                foreach (var status in casterHasStatuses.StatusTypes) list.Add(status.ToString());
+                foreach (var status in casterHasStatuses.StatusTypes)
+                {
+                    list.Add(status.ToString());
+                }
                 data.RequiresCasterHasStatuses = list.ToArray();
             }
             else if (condition.TryCast<CasterHasPrimaryWeaponTypeList>() is { } weaponTypes)
             {
                 var list = new List<string>();
-                foreach (var wt in weaponTypes.WeaponTypes) list.Add(wt.ToString());
+                foreach (var wt in weaponTypes.WeaponTypes)
+                {
+                    list.Add(wt.ToString());
+                }
                 data.RequiresCasterPrimaryWeaponTypes = list.ToArray();
             }
             else if (condition.TryCast<CasterHasAtLeastPercentPoolCondition>() is { } atLeastPool)
@@ -432,11 +444,17 @@ public static class AbilityDataExtensions
             }
             else if (condition.TryCast<TargetHasAnyStatusCondition>() is { } targetAnyStatus)
             {
-                foreach (var status in targetAnyStatus.StatusTypes) targetHasAnyStatuses.Add(status.ToString());
+                foreach (var status in targetAnyStatus.StatusTypes)
+                {
+                    targetHasAnyStatuses.Add(status.ToString());
+                }
             }
             else if (condition.TryCast<TargetHasAllStatusCondition>() is { } targetAllStatus)
             {
-                foreach (var status in targetAllStatus.StatusTypes) targetHasAllStatuses.Add(status.ToString());
+                foreach (var status in targetAllStatus.StatusTypes)
+                {
+                    targetHasAllStatuses.Add(status.ToString());
+                }
             }
             else if (condition.TryCast<CasterHasBuffCondition>() is { } casterHasBuff)
             {
@@ -530,7 +548,7 @@ public static class AbilityDataExtensions
         return data;
     }
 
-    private static readonly Il2CppSystem.Type[] KnownTypes = {
+    private static readonly Il2CppSystem.Type[] _knownTypes = {
         Il2CppType.Of<CasterIsWithinDistanceToTargetCondition>(),
         Il2CppType.Of<CasterIsWithinLevelRange>(),
         Il2CppType.Of<TargetWithinLineOfSight>(),

@@ -31,7 +31,7 @@ public static class BuffDataExtensions
             OverwriteOthers = buffData.OverwriteOthers,
             // Prefer the IsHardCC() method over the raw isHardCC Nullable<bool> field, which
             // throws an NRE via Il2CppInterop when its backing value is null.
-            IsHardCC = buffData.IsHardCC(),
+            IsHardCc = buffData.IsHardCC(),
             HasOverwrites = buffData.HasOverwrites(),
             HasAnyFearOrFleeStatus = buffData.HasAnyFearOrFleeStatus(),
             IsBuffAssociatedWithAbility = buffData.IsBuffAssociatedWithAbility(),
@@ -103,7 +103,10 @@ public static class BuffDataExtensions
         var list = new List<string>();
         if (statuses != null)
         {
-            foreach (var status in statuses) list.Add(status.ToString());
+            foreach (var status in statuses)
+            {
+                list.Add(status.ToString());
+            }
         }
 
         return list.ToArray();
@@ -116,7 +119,11 @@ public static class BuffDataExtensions
         {
             foreach (var group in groups)
             {
-                if (group == null) continue;
+                if (group == null)
+                {
+                    continue;
+                }
+
                 list.Add(new BuffGroupData
                 {
                     Id = group.Id,
@@ -134,7 +141,10 @@ public static class BuffDataExtensions
         var list = new List<int>();
         if (buffIds != null)
         {
-            foreach (var id in buffIds) list.Add(id);
+            foreach (var id in buffIds)
+            {
+                list.Add(id);
+            }
         }
 
         return list.ToArray();

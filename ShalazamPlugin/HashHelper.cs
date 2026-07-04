@@ -5,8 +5,8 @@ internal static class HashHelper
     internal static uint StableHash(string s)
     {
         const uint prime = 16777619;
-        uint hash = 2166136261;
-        foreach (char c in s)
+        var hash = 2166136261u;
+        foreach (var c in s)
         {
             hash ^= c;
             hash *= prime;

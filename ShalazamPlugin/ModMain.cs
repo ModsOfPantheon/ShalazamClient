@@ -39,18 +39,18 @@ public class ModMain : MelonMod
 
         var currentTargetPos = Globals.TrackedOffensiveEntity.transform.position;
 
-        if (Globals._lastPosition == null)
+        if (Globals.LastPosition == null)
         {
-            Globals._lastPosition = Globals.TrackedOffensiveEntity.transform.position;
+            Globals.LastPosition = Globals.TrackedOffensiveEntity.transform.position;
             ShalazamClient.PostMonster(Globals.TrackedOffensiveEntity);
 
             return;
         }
 
-        if (Vector3.Distance(currentTargetPos, Globals._lastPosition.Value) > Globals.MinimumTrackingDistance)
+        if (Vector3.Distance(currentTargetPos, Globals.LastPosition.Value) > Globals.MinimumTrackingDistance)
         {
             ShalazamClient.PostMonster(Globals.TrackedOffensiveEntity);
-            Globals._lastPosition = currentTargetPos;
+            Globals.LastPosition = currentTargetPos;
         }
     }
 
@@ -81,7 +81,7 @@ public class ModMain : MelonMod
         }
 
         Globals.TrackedOffensiveEntity = targetEntity;
-        Globals._lastPosition = null;
+        Globals.LastPosition = null;
 
         UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
     }
@@ -94,7 +94,7 @@ public class ModMain : MelonMod
         }
 
         Globals.TrackedOffensiveEntity = null;
-        Globals._lastPosition = null;
+        Globals.LastPosition = null;
 
         UIChatWindows.Instance.PassMessage("Stopped tracking offensive target", ChatChannelType.Info);
     }
@@ -119,7 +119,10 @@ public class ModMain : MelonMod
         {
             // Only upload the current live set, identified by a "P4" DesignerId prefix.
             if (ability == null || ability.DesignerId == null ||
-                !ability.DesignerId.StartsWith("P4", StringComparison.Ordinal)) continue;
+                !ability.DesignerId.StartsWith("P4", StringComparison.Ordinal))
+            {
+                continue;
+            }
 
             try
             {
