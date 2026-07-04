@@ -143,11 +143,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             NpcVendorItems = new NpcVendorItemsBody
             {
                 Id = HashHelper.StableHash(npcName),
-                Data = new NpcVendorItemsData
-                {
-                    NpcName = npcName,
-                    Items = items
-                }
+                Data = new NpcVendorItemsData(npcName, items)
             }
         };
 
@@ -224,7 +220,7 @@ public class ShalazamWebsocketClient : IShalazamClient
 
     private void PostRequest<T>(T payload) where T : WebsocketPayload
     {
-        payload.IsTestRealm = Globals.IsPTR;
+        payload.IsTestRealm = Globals.IsPtr;
 
         if (_ws.State != WebSocketState.Open)
         {

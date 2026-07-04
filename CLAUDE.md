@@ -18,7 +18,11 @@ dotnet build ShalazamPlugin.sln
 - Post-build copies the built DLL into `$(GamePath)\Mods`, so a successful local build drops it straight into the game's mod folder.
 - Bump `ModMain.PluginVersion` (`ShalazamPlugin/ModMain.cs`) when cutting a release; it's sent to the server as `X-Plugin-Version`.
 
-There is no test suite and no lint/CI config in this repo currently — verify changes by building and running the mod in-game.
+There is no test suite in this repo — verify changes by building and running the mod in-game.
+
+### Linting
+
+Built-in Roslyn analyzers are enabled (`EnableNETAnalyzers`, `AnalysisLevel=latest`, `EnforceCodeStyleInBuild`) in both `.csproj` files, with conventions codified in `.editorconfig`. A plain `dotnet build` enforces them — no separate lint step. Currently only style/naming rules (private-field naming, file-scoped namespaces, unused variables) are build errors; pre-existing nullable-reference warnings (`CS8618`/`CS8602`) are left as warnings rather than fixed in bulk. Don't introduce new nullable-reference warnings in code you touch, and don't suppress a warning to make the build pass — fix the underlying issue.
 
 ### Exploring game types (`tools/reflect`)
 
@@ -55,3 +59,5 @@ Data flows in one direction: **game event → Harmony hook → `EntityManager`/c
 - New outgoing data: add a payload/body pair under `SDK/Models/` (+ `Websockets/` envelope if new), a mapping extension in `Extensions/`, a permission-gated `Post*` method on `IShalazamClient`/`ShalazamWebsocketClient`, and a `Permissions` constant if it's a new permission.
 - Use `MelonLogger` (`.Msg`/`.Warning`/`.Error`), never `Console`/`Debug`, so output shows up in the MelonLoader console/log.
 - Nullable reference types are enabled solution-wide — respect existing `?`/null-check patterns rather than suppressing warnings.
+- Private/internal fields are `_camelCase` (enforced by `.editorconfig`); `const` fields stay `PascalCase`.
+- Braces are required on every `if`/`for`/`foreach`/etc. body, even single-line ones (enforced by `.editorconfig`, `IDE0011`).

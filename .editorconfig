@@ -1,0 +1,56 @@
+root = true
+
+[*]
+indent_style = space
+end_of_line = crlf
+charset = utf-8-bom
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+
+# Brace style: opening brace on its own line (Allman), matching existing code.
+csharp_new_line_before_open_brace = all
+
+# Always require braces, even on single-line if/for/while/etc. bodies.
+csharp_prefer_braces = true:error
+
+# File-scoped namespaces are the convention throughout this codebase.
+csharp_style_namespace_declarations = file_scoped:error
+
+# Prefer var everywhere, including when the type isn't apparent from the right-hand side.
+csharp_style_var_for_built_in_types = true:error
+csharp_style_var_when_type_is_apparent = true:error
+csharp_style_var_elsewhere = true:error
+
+# Unused code should not linger.
+dotnet_diagnostic.CS0168.severity = error
+dotnet_diagnostic.CS0219.severity = error
+
+# Off (default, stated explicitly): Harmony patch parameters are conventionally named __instance,
+# __result, __state, __args etc. - CA1707 would otherwise flag the double-underscore prefix.
+dotnet_diagnostic.CA1707.severity = none
+
+# Naming: const fields keep PascalCase (e.g. ReconnectDelayMs) - checked first so it takes
+# precedence over the general field rule below.
+dotnet_naming_rule.constants_pascal_case.severity = error
+dotnet_naming_rule.constants_pascal_case.symbols = constants
+dotnet_naming_rule.constants_pascal_case.style = pascal_case
+
+dotnet_naming_symbols.constants.applicable_kinds = field
+dotnet_naming_symbols.constants.required_modifiers = const
+
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+# Naming: all other private/internal fields are _camelCase, matching the convention already used
+# by e.g. ShalazamWebsocketClient's _ws/_apiKey/_ongoingRequests - enforced so new code doesn't
+# drift back to bare PascalCase fields.
+dotnet_naming_rule.private_fields_underscore_camel_case.severity = error
+dotnet_naming_rule.private_fields_underscore_camel_case.symbols = private_fields
+dotnet_naming_rule.private_fields_underscore_camel_case.style = underscore_camel_case
+
+dotnet_naming_symbols.private_fields.applicable_kinds = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private, internal, private_protected
+
+dotnet_naming_style.underscore_camel_case.required_prefix = _
+dotnet_naming_style.underscore_camel_case.capitalization = camel_case

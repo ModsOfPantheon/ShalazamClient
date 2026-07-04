@@ -21,7 +21,7 @@ public class BuffInfoPayload
     public bool DoDiminishingReturns { get; set; }
     public bool IgnoreIfExists { get; set; }
     public bool OverwriteOthers { get; set; }
-    public bool IsHardCC { get; set; }
+    public bool IsHardCc { get; set; }
     public bool HasOverwrites { get; set; }
     public bool HasAnyFearOrFleeStatus { get; set; }
     public bool IsBuffAssociatedWithAbility { get; set; }

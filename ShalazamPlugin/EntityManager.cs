@@ -6,14 +6,14 @@ namespace ShalazamPlugin;
 
 public static class EntityManager
 {
-    private static readonly string[] Blacklist = { "Banner of Arms", "Banner of Onslaught", "Challenger's Banner", "Rallying Banner", "Shieldman's Banner", "ghostly riddler" };
+    private static readonly string[] _blacklist = { "Banner of Arms", "Banner of Onslaught", "Challenger's Banner", "Rallying Banner", "Shieldman's Banner", "ghostly riddler" };
     private static string? _apiKey;
 
-    private static readonly List<EntityPlayerGameObject> Players = new();
-    private static readonly List<NetworkWorldItem> WorldItems = new();
-    private static readonly List<EntityNpcGameObject> Monsters = new();
-    private static readonly List<EntityNpcGameObject> FriendlyNPCs = new();
-    private static readonly List<NetworkWorldItem> CraftingStations = new();
+    private static readonly List<EntityPlayerGameObject> _players = new();
+    private static readonly List<NetworkWorldItem> _worldItems = new();
+    private static readonly List<EntityNpcGameObject> _monsters = new();
+    private static readonly List<EntityNpcGameObject> _friendlyNpcs = new();
+    private static readonly List<NetworkWorldItem> _craftingStations = new();
 
     // TODO: Remove once all functions are using the new client
     public static void SetApiKey(string? apiKey)
@@ -28,12 +28,12 @@ public static class EntityManager
 
     public static void OnPlayerAdded(EntityPlayerGameObject entityPlayerGameObject)
     {
-        if (Players.Contains(entityPlayerGameObject))
+        if (_players.Contains(entityPlayerGameObject))
         {
             return;
         }
 
-        Players.Add(entityPlayerGameObject);
+        _players.Add(entityPlayerGameObject);
 
         if (entityPlayerGameObject != Globals.LocalPlayer)
         {
@@ -58,12 +58,12 @@ public static class EntityManager
         }
 
         // Network start is called twice for each object, so deduplicate here
-        if (WorldItems.Contains(networkWorldItem))
+        if (_worldItems.Contains(networkWorldItem))
         {
             return;
         }
 
-        WorldItems.Add(networkWorldItem);
+        _worldItems.Add(networkWorldItem);
 
         // Filter items that can't be gathered, but are still network objects, e.g., doors
         if (networkWorldItem.worldItemType is WorldItemTypeEnum.Harvestable)
@@ -77,7 +77,7 @@ public static class EntityManager
 
         if (networkWorldItem.worldItemType is WorldItemTypeEnum.CraftingStation)
         {
-            CraftingStations.Add(networkWorldItem);
+            _craftingStations.Add(networkWorldItem);
 
             if (!string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -96,12 +96,12 @@ public static class EntityManager
 
     public static void OnWorldItemRemoved(NetworkWorldItem networkWorldItem)
     {
-        WorldItems.Remove(networkWorldItem);
+        _worldItems.Remove(networkWorldItem);
     }
 
     public static void OnNpcAdded(EntityNpcGameObject entityNpcGameObject)
     {
-        if (Monsters.Contains(entityNpcGameObject) || FriendlyNPCs.Contains(entityNpcGameObject))
+        if (_monsters.Contains(entityNpcGameObject) || _friendlyNpcs.Contains(entityNpcGameObject))
         {
             return;
         }
@@ -110,7 +110,7 @@ public static class EntityManager
 
         if (entityNpcGameObject.Profession == NpcProfession.None)
         {
-            Monsters.Add(entityNpcGameObject);
+            _monsters.Add(entityNpcGameObject);
 
             if (entityNpcGameObject.Status.IsDead())
             {
@@ -143,7 +143,7 @@ public static class EntityManager
                 return;
             }
 
-            if (Blacklist.Contains(npcName))
+            if (_blacklist.Contains(npcName))
             {
                 return;
             }
@@ -155,7 +155,7 @@ public static class EntityManager
         }
         else
         {
-            FriendlyNPCs.Add(entityNpcGameObject);
+            _friendlyNpcs.Add(entityNpcGameObject);
 
             if (!string.IsNullOrWhiteSpace(_apiKey))
             {
@@ -166,7 +166,7 @@ public static class EntityManager
 
     public static void OnNpcRemoved(EntityNpcGameObject entityNpcGameObject)
     {
-        Monsters.Remove(entityNpcGameObject);
+        _monsters.Remove(entityNpcGameObject);
 
         LootCache.OnNpcDeleted(entityNpcGameObject);
     }

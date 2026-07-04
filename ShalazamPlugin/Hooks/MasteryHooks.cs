@@ -24,19 +24,28 @@ public class MasteryHandleOpenHook
         try
         {
             var logic = __instance.GetComponent<MasteryTree>()?.logic;
-            if (logic == null) return;
+            if (logic == null)
+            {
+                return;
+            }
 
             var context = logic.BuildPlayerContext();
             var characterClass = context?.CharacterClass.ToString() ?? "Unknown";
 
-            if (!_sentClasses.Add(characterClass)) return;
+            if (!_sentClasses.Add(characterClass))
+            {
+                return;
+            }
 
             var states = logic.GetDerivedStates();
             var nodeDataList = new List<MasteryNodeData>();
             foreach (var kvp in states)
             {
                 var node = logic.GetNodeDataByGuid(kvp.Key);
-                if (node != null) nodeDataList.Add(node);
+                if (node != null)
+                {
+                    nodeDataList.Add(node);
+                }
             }
 
             var payload = nodeDataList.ToMasteryPayload(characterClass);

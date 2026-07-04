@@ -9,7 +9,7 @@ namespace ShalazamPlugin.Hooks;
 [HarmonyPatch(typeof(UINpcInteractionMerchant), nameof(UINpcInteractionMerchant.RefreshVendorItems))]
 public class VendorUIRefreshHook
 {
-    private static readonly HashSet<uint> SeenVendors = new();
+    private static readonly HashSet<uint> _seenVendors = new();
 
     private static void Postfix(UINpcInteractionMerchant __instance, TieredMerchantTab unlockedTabs, IEntityNpc npc)
     {
@@ -19,15 +19,23 @@ public class VendorUIRefreshHook
             var npcName = npcGameObject?.info?.DisplayName ?? "(unknown)";
             var items = npc?.Vendor?.vendorItems;
 
-            if (items == null) return;
+            if (items == null)
+            {
+                return;
+            }
 
             foreach (var vi in items)
             {
                 if (vi.Item != null)
+                {
                     ItemCache.OnItemSeen(vi.Item);
+                }
             }
 
-            if (npcGameObject == null || !SeenVendors.Add(npcGameObject.NetworkId.Value)) return;
+            if (npcGameObject == null || !_seenVendors.Add(npcGameObject.NetworkId.Value))
+            {
+                return;
+            }
 
             var entries = items
                 .Where(vi => vi.Item != null)
