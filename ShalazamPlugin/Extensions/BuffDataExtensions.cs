@@ -89,7 +89,10 @@ public static class BuffDataExtensions
         var list = new List<string>();
         if (statuses != null)
         {
-            foreach (var status in statuses) list.Add(status.ToString());
+            foreach (var status in statuses)
+            {
+                list.Add(status.ToString());
+            }
         }
 
         return list.ToArray();
