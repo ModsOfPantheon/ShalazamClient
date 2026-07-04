@@ -46,7 +46,7 @@ public class UISettingsHooks
         {
             foreach (var item in Globals.LocalPlayer.Inventory.items)
             {
-                ItemCache.OnItemAdded(item.Value, InventoryWithPersyst.AddFlags.None);
+                ItemCache.OnItemSeen(item.Value);
             }
         })));
     }

@@ -4,24 +4,20 @@ namespace ShalazamPlugin;
 
 public static class ItemCache
 {
-    private static readonly Dictionary<int, Item> Cache = new();
+    // Deduplicate by ItemId across every source (inventory, vendors, loot, quest rewards) so an item we've
+    // already uploaded from one place isn't re-sent when it shows up somewhere else.
+    private static readonly HashSet<int> SeenItemIds = new();
 
-    public static void OnItemAdded(Item item, InventoryWithPersyst.AddFlags flags)
+    // Called for every Item we come across (inventory, vendors, loot windows, quest reward slots). Uploads
+    // the first time we see a given ItemId and ignores it thereafter.
+    public static void OnItemSeen(Item item)
     {
-        if (!Cache.TryAdd(item.Template.ItemId, item))
+        if (item?.Template == null)
         {
             return;
         }
-        
-        ModMain.ShalazamClient.PostItem(item);
-    }
 
-    public static void OnItemStackSizeChanged(Item item, int arg2, int arg3)
-    {
-        // Do not use the stack size, it has not been unboxed correctly and will return the memory address of
-        // the stack size instead... another bug with the il2cppinterop
-
-        if (!Cache.TryAdd(item.Template.ItemId, item))
+        if (!SeenItemIds.Add(item.Template.ItemId))
         {
             return;
         }

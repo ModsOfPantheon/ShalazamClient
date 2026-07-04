@@ -10,17 +10,18 @@ namespace ShalazamPlugin;
 public class ModMain : MelonMod
 {
     public static IShalazamClient ShalazamClient;
-    
+
     public override void OnInitializeMelon()
     {
         var category = MelonPreferences.CreateCategory("ShalazamApi");
         var apiKey = category.CreateEntry<string>("ApiKey", "");
         Globals.MinimumTrackingDistance = category.CreateEntry("MinimumTrackingDistance", 3f).Value;
+        Globals.VerboseLogging = category.CreateEntry("VerboseLogging", false).Value;
 
         category.SaveToFile(false);
-        
+
         EntityManager.SetApiKey(apiKey.Value);
-        
+
         // Having this isn't very useful because there is no event fired when someone saves the config file
         ShalazamClient = new ShalazamWebsocketClient(apiKey.Value);
     }
@@ -37,7 +38,7 @@ public class ModMain : MelonMod
         }
 
         var currentTargetPos = Globals.TrackedOffensiveEntity.transform.position;
-        
+
         if (Globals._lastPosition == null)
         {
             Globals._lastPosition = Globals.TrackedOffensiveEntity.transform.position;
@@ -52,7 +53,7 @@ public class ModMain : MelonMod
             Globals._lastPosition = currentTargetPos;
         }
     }
-    
+
     public static void TrackOffensiveTarget()
     {
         if (Globals.LocalPlayer == null)
@@ -78,10 +79,10 @@ public class ModMain : MelonMod
             UIChatWindows.Instance.PassMessage($"Can't track {targetEntity.info.DisplayName} because they are not a monster", ChatChannelType.Info);
             return;
         }
-        
+
         Globals.TrackedOffensiveEntity = targetEntity;
         Globals._lastPosition = null;
-        
+
         UIChatWindows.Instance.PassMessage($"Started tracking {Globals.TrackedOffensiveEntity?.info.DisplayName}", ChatChannelType.Info);
     }
 
@@ -91,12 +92,50 @@ public class ModMain : MelonMod
         {
             return;
         }
-        
+
         Globals.TrackedOffensiveEntity = null;
         Globals._lastPosition = null;
-        
+
         UIChatWindows.Instance.PassMessage("Stopped tracking offensive target", ChatChannelType.Info);
     }
 
-    public const string PluginVersion = "2.5.0";
+    // On-demand bulk upload of every ability baked into the client build
+    // (CachedInBuildData.abilityData), routed through the same AbilityCache.PostAbility
+    // path the codex uses. Triggered by the /shalazamuploadabilities chat command so it
+    // doesn't run on every client load. Note: ToRequestPayload sources ClassName from
+    // Globals.LocalPlayer, so every uploaded ability is tagged with the local player's class.
+    public static void UploadAllAbilitiesFromCache()
+    {
+        var abilities = CachedInBuildData.data?.abilityData;
+        if (abilities == null)
+        {
+            UIChatWindows.Instance.PassMessage("Shalazam: ability cache not loaded yet", ChatChannelType.Info);
+            return;
+        }
+
+        var posted = 0;
+        var failed = 0;
+        foreach (var ability in abilities)
+        {
+            // Only upload the current live set, identified by a "P4" DesignerId prefix.
+            if (ability == null || ability.DesignerId == null ||
+                !ability.DesignerId.StartsWith("P4", StringComparison.Ordinal)) continue;
+
+            try
+            {
+                AbilityCache.PostAbility(ability);
+                posted++;
+            }
+            catch (Exception ex)
+            {
+                failed++;
+                MelonLogger.Warning($"[UploadAbilities] {ability.Id} ({ability.DesignerId}): {ex.Message}");
+            }
+        }
+
+        UIChatWindows.Instance.PassMessage(
+            $"Shalazam: queued {posted} abilities for upload ({failed} failed)", ChatChannelType.Info);
+    }
+
+    public const string PluginVersion = "2026.07.01";
 }

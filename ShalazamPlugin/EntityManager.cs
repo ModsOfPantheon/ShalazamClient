@@ -156,7 +156,7 @@ public static class EntityManager
         else
         {
             FriendlyNPCs.Add(entityNpcGameObject);
-            
+
             if (!string.IsNullOrWhiteSpace(_apiKey))
             {
                 ModMain.ShalazamClient.PostNpc(entityNpcGameObject);

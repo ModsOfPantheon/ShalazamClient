@@ -16,6 +16,13 @@ public class SendChatMessageHook
             return false;
         }
 
+        if (message == "/shalazamuploadabilities")
+        {
+            ModMain.UploadAllAbilitiesFromCache();
+
+            return false;
+        }
+
         return true;
     }
 }
