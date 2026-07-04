@@ -114,6 +114,7 @@ public static class ItemExtensions
             ItemWeight = template.ItemWeight,
             MaxDamage = template.MaxDamage,
             ModelId = template.ModelId,
+            MultiplierModifiers = BuildMultiplierModifiers(template),
             PrimaryBonus = primaryBonus?.ToString(),
             PrimarySkill = template.PrimarySkill.ToString(),
             Rarity = template.RarityId.ToString(),
@@ -181,6 +182,43 @@ public static class ItemExtensions
         }
 
         return statModifiersList;
+    }
+
+    // Conditional/"bane" multipliers off the template (e.g. "10% Physical Crit Damage vs Animal"). These are
+    // separate from the instance stat modifiers above: the qualifier ("vs Animal"/"vs Wolf") lives here on
+    // BaneKind/BaneRace and isn't exposed by any of the flat stat fields. BaneKind==Any / BaneRace==None are
+    // the "applies to everything" sentinels, so they're normalised to null rather than emitted.
+    private static List<ItemInfoPayloadMultiplierModifier> BuildMultiplierModifiers(ItemTemplate template)
+    {
+        var result = new List<ItemInfoPayloadMultiplierModifier>();
+
+        var multiplierModifiers = template.MultiplierModifiers;
+        if (multiplierModifiers == null)
+        {
+            return result;
+        }
+
+        foreach (var multiplierModifier in multiplierModifiers)
+        {
+            if (multiplierModifier == null)
+            {
+                continue;
+            }
+
+            var baneKind = multiplierModifier.BaneKind;
+            var baneRace = multiplierModifier.BaneRace;
+
+            result.Add(new ItemInfoPayloadMultiplierModifier
+            {
+                MultiplierType = multiplierModifier.MultiplierType.ToString(),
+                ModifierType = multiplierModifier.Modifier?.ModifierType.ToString(),
+                BaneKind = baneKind == EntityKind.Any ? null : baneKind.ToString(),
+                BaneRace = baneRace == EntityRace.None ? null : baneRace.ToString(),
+                Amount = multiplierModifier.Amount
+            });
+        }
+
+        return result;
     }
 
     private static ItemRequirementOverride ToRequirementOverride(SkillUnlock.ClassOverride classOverride)

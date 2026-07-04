@@ -51,6 +51,7 @@ public class ItemInfoPayload
     public int MaxStackSize { get; set; }
     public int MaxStackSizeOrCharges { get; set; }
     public int ModelId { get; set; }
+    public List<ItemInfoPayloadMultiplierModifier> MultiplierModifiers { get; set; }
     public bool? Polarity { get; set; }
     public float? Potency { get; set; }
     public string? PrimaryBonus { get; set; }

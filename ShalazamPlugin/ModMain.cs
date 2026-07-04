@@ -153,5 +153,5 @@ public class ModMain : MelonMod
         UIChatWindows.Instance.PassMessage("Shalazam: queued buffs for upload", ChatChannelType.Info);
     }
 
-    public const string PluginVersion = "2026.07.03";
+    public const string PluginVersion = "2026.07.04";
 }
