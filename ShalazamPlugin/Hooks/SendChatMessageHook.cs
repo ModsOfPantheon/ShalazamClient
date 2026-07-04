@@ -23,6 +23,13 @@ public class SendChatMessageHook
             return false;
         }
 
+        if (message == "/shalazamuploadbuffs")
+        {
+            ModMain.DumpBuffsFromCache();
+
+            return false;
+        }
+
         return true;
     }
 }

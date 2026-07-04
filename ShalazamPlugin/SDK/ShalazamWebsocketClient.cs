@@ -99,6 +99,26 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(ability.ToRequestPayload());
     }
 
+    public void PostBuffs(IEnumerable<BuffData> buffs)
+    {
+        if (!_roles.Contains(Permissions.CreateBuff))
+        {
+            return;
+        }
+
+        foreach (var buff in buffs)
+        {
+            // Skip null and blank/padding entries (Id 0), which would all collide on the
+            // Id-keyed request map and spam duplicate-request warnings.
+            if (buff == null || buff.Id == 0)
+            {
+                continue;
+            }
+
+            PostRequest(buff.ToBuffPayload());
+        }
+    }
+
     public void PostNpc(EntityNpcGameObject entityNpcGameObject)
     {
         if (!_roles.Contains(Permissions.CreateNpc))
