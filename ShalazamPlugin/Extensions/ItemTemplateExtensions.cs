@@ -58,7 +58,15 @@ public static class ItemExtensions
         try { allowedRaces = template.allowedRaces?.Unbox<EntityRaceMask>(); } catch (Exception) { }
         try { armorModifier = template.ArmorModifier?.Unbox<float>(); } catch (Exception) { }
         try { blockMod = template.BlockMod?.Unbox<float>(); } catch (Exception) { }
-        try { buyPrice = template.BuyPrice?.Unbox<int>(); } catch (Exception) { }
+        // template.BuyPrice is a raw Nullable<int> il2cpp field that NREs on access (unlike CoinValue, a plain
+        // int). Use the game's BuyPriceOrDefault accessor instead; treat 0 as "not sold" to keep the null-omit
+        // semantics the server already expects.
+        try
+        {
+            var bp = template.BuyPriceOrDefault;
+            buyPrice = bp == 0 ? null : bp;
+        }
+        catch (Exception) { }
         try { craftingFamily = template.CraftingFamily?.Unbox<CraftingFamilyType>(); } catch (Exception) { }
         try { damageModifier = template.DamageModifier?.Unbox<float>(); } catch (Exception) { }
         try { delayModifier = template.DelayModifier?.Unbox<float>(); } catch (Exception) { }
