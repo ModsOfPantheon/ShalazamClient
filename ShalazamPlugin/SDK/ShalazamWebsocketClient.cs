@@ -25,6 +25,7 @@ public class ShalazamWebsocketClient : IShalazamClient
     public event Func<WebSocketCloseStatus?, string?, Task>? Disconnected;
 
     private string[] _roles = Array.Empty<string>();
+    private bool _updateRequired;
     public string? Username { get; private set; }
 
     // Update status from the last "me" message: "none", "optional", or "required".
