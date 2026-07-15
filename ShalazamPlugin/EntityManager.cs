@@ -48,6 +48,26 @@ public static class EntityManager
         {
             UIChatWindows.Instance.PassMessage("Failed to request your permissions from Shalazam, did you forget to add your API key to the config?", ChatChannelType.Info);
         }
+
+        AnnounceUpdateStatus();
+    }
+
+    // The "me" message's update status arrives before the chat window exists, so it's
+    // announced here on player-add, alongside the welcome message.
+    private static void AnnounceUpdateStatus()
+    {
+        switch (ModMain.ShalazamClient.UpdateStatus)
+        {
+            case "optional":
+                UIChatWindows.Instance.PassMessage(
+                    "There is a ShalazamClient update available, please update", ChatChannelType.Info);
+                break;
+            case "required":
+                UIChatWindows.Instance.PassMessage(
+                    "Your ShalazamClient is too old and must be updated. Shalazam uploads will not work until the mod is updated",
+                    ChatChannelType.Info);
+                break;
+        }
     }
 
     public static void OnWorldItemAdded(NetworkWorldItem networkWorldItem)
