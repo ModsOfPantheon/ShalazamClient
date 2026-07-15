@@ -25,7 +25,12 @@ public class ShalazamWebsocketClient : IShalazamClient
     public event Func<WebSocketCloseStatus?, string?, Task>? Disconnected;
 
     private string[] _roles = Array.Empty<string>();
+    private bool _updateRequired;
     public string? Username { get; private set; }
+
+    // Update status from the last "me" message: "none", "optional", or "required".
+    // Surfaced so the UI can announce it once the chat window is available.
+    public string? UpdateStatus { get; private set; }
 
     public ShalazamWebsocketClient(string apiKey, CancellationToken cancellationToken = default)
     {
@@ -200,6 +205,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             var userInfo = JsonSerializer.Deserialize<UserPayload>(body, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
             Username = userInfo.Me.Username;
             _roles = userInfo.Me.Permissions;
+            HandleUpdateStatus(userInfo.Me.Update);
         }
         else
         {
@@ -218,8 +224,23 @@ public class ShalazamWebsocketClient : IShalazamClient
         return Task.CompletedTask;
     }
 
+    // The "me" message carries an update status: "none", "optional", or "required".
+    // "required" latches uploads off until a future "me" says otherwise. The actual
+    // user-facing message is announced by EntityManager once the chat window exists,
+    // since "me" arrives before the UI is available.
+    private void HandleUpdateStatus(string? update)
+    {
+        _updateRequired = update == "required";
+        UpdateStatus = update;
+    }
+
     private void PostRequest<T>(T payload) where T : WebsocketPayload
     {
+        if (_updateRequired)
+        {
+            return;
+        }
+
         payload.IsTestRealm = Globals.IsPtr;
 
         if (_ws.State != WebSocketState.Open)

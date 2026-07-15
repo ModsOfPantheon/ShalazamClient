@@ -8,6 +8,9 @@ public interface IShalazamClient
 {
     public string? Username { get; }
 
+    // Update status from the last "me" message: "none", "optional", or "required".
+    public string? UpdateStatus { get; }
+
     public void PostResourceLocation(NetworkWorldItem networkWorldItem);
 
     public void PostWorldItemLocation(NetworkWorldItem networkWorldItem);
