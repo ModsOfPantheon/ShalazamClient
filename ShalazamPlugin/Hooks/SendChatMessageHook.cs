@@ -16,14 +16,14 @@ public class SendChatMessageHook
             return false;
         }
 
-        if (message == "/shalazamuploadabilities")
+        if (message == "/sua")
         {
             ModMain.UploadAllAbilitiesFromCache();
 
             return false;
         }
 
-        if (message == "/shalazamuploadbuffs")
+        if (message == "/sub")
         {
             ModMain.DumpBuffsFromCache();
 

@@ -7,6 +7,7 @@ using System.Text.Json;
 // Add --depth=N to control recursion depth (default: 2). Use --depth=0 for flat dump.
 // Add --refs to show all types that reference this type in fields, properties, or method signatures.
 // Add --html[=output.html] to generate a browsable HTML type browser (default: types.html).
+// Add --json[=output.json] to dump every type as deterministic, indented JSON for diffing across patches (default: types.json).
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 
@@ -17,6 +18,8 @@ if (args.Length == 0)
     Console.Error.WriteLine("  e.g. dotnet run EntityNpcGameObject --depth=3");
     Console.Error.WriteLine("  e.g. dotnet run --html");
     Console.Error.WriteLine("  e.g. dotnet run --html=browser.html");
+    Console.Error.WriteLine("  e.g. dotnet run --json");
+    Console.Error.WriteLine("  e.g. dotnet run --json=patch-1.2.json");
     return 1;
 }
 
@@ -24,11 +27,15 @@ var maxDepth = 2;
 var showRefs = false;
 var showHtml = false;
 var htmlPath = "types.html";
+var showJson = false;
+var jsonPath = "types.json";
 var typeArgs = args.Where(a => {
     if (a.StartsWith("--depth=") && int.TryParse(a["--depth=".Length..], out var d)) { maxDepth = d; return false; }
     if (a == "--refs") { showRefs = true; return false; }
     if (a == "--html") { showHtml = true; return false; }
     if (a.StartsWith("--html=")) { showHtml = true; htmlPath = a["--html=".Length..]; return false; }
+    if (a == "--json") { showJson = true; return false; }
+    if (a.StartsWith("--json=")) { showJson = true; jsonPath = a["--json=".Length..]; return false; }
     return true;
 }).ToArray();
 
@@ -91,6 +98,12 @@ if (showHtml)
     return 0;
 }
 
+if (showJson)
+{
+    GenerateJson(jsonPath);
+    return 0;
+}
+
 if (typeArgs.Length == 0)
 {
     Console.Error.WriteLine("No type names specified. Use --html to generate the type browser.");
@@ -148,6 +161,25 @@ void GenerateHtml(string outputPath)
     var html = HtmlTemplate().Replace("/*DATA*/", json);
     File.WriteAllText(outputPath, html);
     Console.WriteLine($"Written: {Path.GetFullPath(outputPath)}");
+}
+
+// ── JSON generation (diff-friendly snapshot) ───────────────────────────────
+
+void GenerateJson(string outputPath)
+{
+    Console.Error.Write("Building type data... ");
+    var entries = allTypes.Values
+        .Where(t => !IsGeneratedType(t))
+        .OrderBy(t => t.FullName, StringComparer.Ordinal)
+        .Select(BuildTypeData)
+        .ToArray();
+    Console.Error.WriteLine($"{entries.Length} types");
+
+    // Indented + newline-terminated so `git diff` / `diff` produce clean line-based
+    // hunks when comparing snapshots taken before and after a game patch.
+    var json = JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true });
+    File.WriteAllText(outputPath, json + Environment.NewLine);
+    Console.WriteLine($"Written: {Path.GetFullPath(outputPath)} ({entries.Length} types)");
 }
 
 object BuildTypeData(Type t)
