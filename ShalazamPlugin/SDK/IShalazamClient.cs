@@ -22,6 +22,6 @@ public interface IShalazamClient
     public void PostBuffs(IEnumerable<BuffData> buffs);
     public void PostDrops(EntityNpcGameObject entityNpcGameObject, bool isSkinning, IEnumerable<Item> itemsDropped);
     public void PostNpc(EntityNpcGameObject entityNpcGameObject);
-    public void PostNpcVendorItems(uint networkId, string npcName, IEnumerable<NpcVendorItemEntry> items);
+    public void PostNpcVendorItems(uint networkId, string npcName, float locX, float locY, float locZ, string zone, IEnumerable<NpcVendorItemEntry> items);
     public void PostMastery(MasteryPayload payload);
 }
