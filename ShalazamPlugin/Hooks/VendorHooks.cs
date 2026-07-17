@@ -47,7 +47,15 @@ public class VendorUIRefreshHook
                 })
                 .ToList();
 
-            ModMain.ShalazamClient.PostNpcVendorItems(npcGameObject.NetworkId.Value, npcName, entries);
+            var pos = npcGameObject.transform.position;
+            ModMain.ShalazamClient.PostNpcVendorItems(
+                npcGameObject.NetworkId.Value,
+                npcName,
+                MathF.Round(pos.x, 2),
+                MathF.Round(pos.y, 2),
+                MathF.Round(pos.z, 2),
+                PantheonGameClient.currentZone.ToString(),
+                entries);
         }
         catch (Exception ex)
         {

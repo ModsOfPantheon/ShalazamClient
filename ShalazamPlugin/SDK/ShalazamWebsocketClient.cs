@@ -134,7 +134,7 @@ public class ShalazamWebsocketClient : IShalazamClient
         PostRequest(entityNpcGameObject.ToNpcPayload());
     }
 
-    public void PostNpcVendorItems(uint networkId, string npcName, IEnumerable<NpcVendorItemEntry> items)
+    public void PostNpcVendorItems(uint networkId, string npcName, float locX, float locY, float locZ, string zone, IEnumerable<NpcVendorItemEntry> items)
     {
         if (!_roles.Contains(Permissions.CreateNpc))
         {
@@ -148,7 +148,7 @@ public class ShalazamWebsocketClient : IShalazamClient
             NpcVendorItems = new NpcVendorItemsBody
             {
                 Id = HashHelper.StableHash(npcName),
-                Data = new NpcVendorItemsData(npcName, items)
+                Data = new NpcVendorItemsData(npcName, locX, locY, locZ, zone, items)
             }
         };
 
