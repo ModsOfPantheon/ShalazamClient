@@ -141,7 +141,11 @@ public static class AbilityDataExtensions
             LongTermPositionRange = conditions.LongTermPositionRange,
             TargetMinLevel = conditions.TargetMinLevel,
             TargetMaxLevel = conditions.TargetMaxLevel,
-            RequiresCasterCombatPosition = conditions.RequiresCasterCombatPosition
+            RequiresCasterCombatPosition = conditions.RequiresCasterCombatPosition,
+            RequiresTargetHasBuffs = conditions.RequiresTargetHasBuffs,
+            RequiresCasterMissingAllBuffsInGroups = conditions.RequiresCasterMissingAllBuffsInGroups,
+            RequiresCasterPrimaryWeaponType = conditions.RequiresCasterPrimaryWeaponType,
+            RequiresCasterSecondaryWeaponType = conditions.RequiresCasterSecondaryWeaponType
         };
 
         return new AbilityPayload
@@ -255,6 +259,10 @@ public static class AbilityDataExtensions
         public int? TargetMinLevel;
         public int? TargetMaxLevel;
         public string? RequiresCasterCombatPosition;
+        public AbilityBuffConditionData[] RequiresTargetHasBuffs = Array.Empty<AbilityBuffConditionData>();
+        public int[] RequiresCasterMissingAllBuffsInGroups = Array.Empty<int>();
+        public string? RequiresCasterPrimaryWeaponType;
+        public string? RequiresCasterSecondaryWeaponType;
     }
 
     private static ConditionData ParseConditions(Il2CppSystem.Collections.Generic.List<ICondition> conditions, string abilityName)
@@ -268,6 +276,8 @@ public static class AbilityDataExtensions
         var casterHasItems = new List<AbilityItemConditionData>();
         var targetHasAnyStatuses = new List<string>();
         var targetHasAllStatuses = new List<string>();
+        var targetHasBuffs = new List<AbilityBuffConditionData>();
+        var casterMissingAllBuffsInGroups = new List<int>();
 
         foreach (var condition in conditions)
         {
@@ -535,6 +545,27 @@ public static class AbilityDataExtensions
             {
                 data.RequiresCasterCombatPosition = combatPosition.CombatPosition.ToString();
             }
+            else if (condition.TryCast<TargetHasBuffCondition>() is { } targetHasBuff)
+            {
+                targetHasBuffs.Add(new AbilityBuffConditionData
+                {
+                    BuffId = targetHasBuff.Buff.BuffId,
+                    MinStackCount = targetHasBuff.MinStackCount,
+                    MaxStackCount = targetHasBuff.MaxStackCount
+                });
+            }
+            else if (condition.TryCast<CasterMissingAllBuffsInGroupCondition>() is { } casterMissingBuffGroup)
+            {
+                casterMissingAllBuffsInGroups.Add(casterMissingBuffGroup.Group.GroupId);
+            }
+            else if (condition.TryCast<CasterHasPrimaryWeaponType>() is { } primaryWeaponType)
+            {
+                data.RequiresCasterPrimaryWeaponType = primaryWeaponType.WeaponType.ToString();
+            }
+            else if (condition.TryCast<CasterHasSecondaryWeaponType>() is { } secondaryWeaponType)
+            {
+                data.RequiresCasterSecondaryWeaponType = secondaryWeaponType.WeaponType.ToString();
+            }
         }
 
         data.RequiresTargetMissingBuffs = missingBuffs.ToArray();
@@ -545,6 +576,8 @@ public static class AbilityDataExtensions
         data.RequiresCasterHasItems = casterHasItems.ToArray();
         data.RequiresTargetHasAnyStatuses = targetHasAnyStatuses.ToArray();
         data.RequiresTargetHasAllStatuses = targetHasAllStatuses.ToArray();
+        data.RequiresTargetHasBuffs = targetHasBuffs.ToArray();
+        data.RequiresCasterMissingAllBuffsInGroups = casterMissingAllBuffsInGroups.ToArray();
         return data;
     }
 
@@ -595,6 +628,10 @@ public static class AbilityDataExtensions
         Il2CppType.Of<CasterIsWithinDistanceToTargetOnCastStartCondition>(),
         Il2CppType.Of<CasterIsWithinDistanceToLongTermPositionStorageCondition>(),
         Il2CppType.Of<TargetIsWithinLevelRange>(),
-        Il2CppType.Of<CasterHasCombatPositionCondition>()
+        Il2CppType.Of<CasterHasCombatPositionCondition>(),
+        Il2CppType.Of<TargetHasBuffCondition>(),
+        Il2CppType.Of<CasterMissingAllBuffsInGroupCondition>(),
+        Il2CppType.Of<CasterHasPrimaryWeaponType>(),
+        Il2CppType.Of<CasterHasSecondaryWeaponType>()
     };
 }
