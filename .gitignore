@@ -37,3 +37,5 @@ Desktop.ini
 
 global.json
 Directory.Build.props
+types*.html
+types*.json

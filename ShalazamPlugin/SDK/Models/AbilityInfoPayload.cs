@@ -106,4 +106,8 @@ public class AbilityInfoPayload
     public int? TargetMinLevel { get; set; }
     public int? TargetMaxLevel { get; set; }
     public string? RequiresCasterCombatPosition { get; set; }
+    public AbilityBuffConditionData[] RequiresTargetHasBuffs { get; set; }
+    public int[] RequiresCasterMissingAllBuffsInGroups { get; set; }
+    public string? RequiresCasterPrimaryWeaponType { get; set; }
+    public string? RequiresCasterSecondaryWeaponType { get; set; }
 }
