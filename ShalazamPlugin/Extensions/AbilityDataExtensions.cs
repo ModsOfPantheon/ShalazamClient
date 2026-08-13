@@ -117,7 +117,7 @@ public static class AbilityDataExtensions
             RequiresCasterAtLeastPool = conditions.RequiresCasterAtLeastPool,
             RequiresCasterOrTargetLineOfSightToDefensiveTarget = conditions.RequiresCasterOrTargetLineOfSightToDefensiveTarget,
             MasteryAbilities = masteryAbilityIds.ToArray(),
-            BaseAbilityId = abilityData.baseAbility?.Id,
+            BaseAbilityId = abilityData.GetProgressionBaseAbility()?.Id,
             RequiresTargetBetweenPool = conditions.TargetBetweenPool,
             RequiresTargetHasPoolType = conditions.RequiresTargetHasPoolType,
             RequiresCasterHasAnyShieldEquipped = conditions.RequiresCasterHasAnyShieldEquipped,
