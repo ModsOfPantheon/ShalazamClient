@@ -9,7 +9,6 @@ public static class NetworkWorldItemExtensions
     {
         return new LocationPayload
         {
-            Id = networkWorldItem.NetworkId.Value,
             Type = "location",
             Location = new LocationBody
             {
@@ -26,7 +25,6 @@ public static class NetworkWorldItemExtensions
     {
         return new ResourcePayload
         {
-            Id = networkWorldItem.NetworkId.Value,
             Type = "resource",
             Resource = new ResourceBody
             {
