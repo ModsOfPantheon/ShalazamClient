@@ -35,6 +35,10 @@ public class ItemInfoPayload
     public int EquipBuffId { get; set; }
     public string IconKey { get; set; }
     public int InWorldModelId { get; set; }
+
+    // The parts of this item that belong to one particular copy rather than to the definition above.
+    public ItemInstancePayload? Instance { get; set; }
+
     public string ItemDescription { get; set; }
     public IEnumerable<string> ItemFlags { get; set; }
     public int ItemId { get; set; }
@@ -51,7 +55,6 @@ public class ItemInfoPayload
     public int MaxStackSize { get; set; }
     public int MaxStackSizeOrCharges { get; set; }
     public int ModelId { get; set; }
-    public List<ItemInfoPayloadMultiplierModifier> MultiplierModifiers { get; set; }
     public bool? Polarity { get; set; }
     public float? Potency { get; set; }
     public string? PrimaryBonus { get; set; }
@@ -63,6 +66,11 @@ public class ItemInfoPayload
     public IEnumerable<ItemRequirementOverride>? RequirementOverrides { get; set; }
     public string? SecondaryBonus { get; set; }
     public float? SkillEffectiveness { get; set; }
+
+    // Stats belonging to the item *definition*. Distinct from the per-instance rolls, which are reported
+    // under ItemBody.Instance. The client has never been sent a populated ItemTemplate.StatModifiers array,
+    // so in practice this is omitted — it's kept so that if the server ever does send definition-level
+    // stats we record them rather than silently conflating them with a roll.
     public List<ItemInfoPayloadStatModifier>? StatModifiers { get; set; }
     public string? ToolType { get; set; }
     public string? UseAnimation { get; set; }

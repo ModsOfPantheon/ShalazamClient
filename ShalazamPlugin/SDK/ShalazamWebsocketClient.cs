@@ -14,6 +14,13 @@ namespace ShalazamPlugin.SDK;
 public class ShalazamWebsocketClient : IShalazamClient
 {
     private readonly ConcurrentDictionary<uint, string> _ongoingRequests;
+
+    // Correlation id for in-flight requests, assigned per send. It deliberately isn't derived from whatever
+    // the request is about: item ids stopped being unique per request once uncommon+ items began rolling
+    // their own stats, so two copies of the same ItemId are two distinct uploads that both need tracking.
+    // The subject's own id still travels inside the body (e.g. item.id).
+    private int _nextRequestId;
+
     private ClientWebSocket _ws = new();
     private Task? _receiveTask;
     private readonly SemaphoreSlim _connectLock = new(1, 1);
@@ -143,7 +150,6 @@ public class ShalazamWebsocketClient : IShalazamClient
 
         var payload = new NpcVendorItemsPayload
         {
-            Id = networkId,
             Type = "npc-vendor-items",
             NpcVendorItems = new NpcVendorItemsBody
             {
@@ -242,6 +248,7 @@ public class ShalazamWebsocketClient : IShalazamClient
         }
 
         payload.IsTestRealm = Globals.IsPtr;
+        payload.Id = unchecked((uint)Interlocked.Increment(ref _nextRequestId));
 
         if (_ws.State != WebSocketState.Open)
         {

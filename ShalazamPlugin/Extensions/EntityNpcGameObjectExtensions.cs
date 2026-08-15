@@ -15,7 +15,6 @@ public static class EntityNpcGameObjectExtensions
 
         return new NpcPayload
         {
-            Id = entityNpcGameObject.NetworkId.Value,
             Type = "npc",
             Npc = new NpcBody
             {
@@ -54,7 +53,6 @@ public static class EntityNpcGameObjectExtensions
     {
         return new MonsterPayload
         {
-            Id = entityNpcGameObject.NetworkId.Value,
             Type = "monster",
             Monster = new MonsterBody
             {
