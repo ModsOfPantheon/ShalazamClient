@@ -59,6 +59,7 @@ public class ItemInfoPayload
     public float? Potency { get; set; }
     public string? PrimaryBonus { get; set; }
     public string PrimarySkill { get; set; }
+    public string? Proficiency { get; set; }
     public string Rarity { get; set; }
     public int? RecipeId { get; set; }
     public int RequiredLevel { get; set; }
