@@ -56,7 +56,6 @@ public static class BuffDataExtensions
 
         return new BuffPayload
         {
-            Id = (uint)buffData.Id,
             Type = "buff",
             Buff = new BuffBody
             {

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Il2Cpp;
 using Il2CppInterop.Runtime.InteropTypes.Arrays;
 using Il2CppPantheonPersist;
@@ -118,19 +119,20 @@ public static class ItemExtensions
             EffectId = effectId,
             EffectivenessMod = effectivenessMod,
             IconKey = template.IconKey,
+            Instance = BuildInstance(item, template),
             ItemFlags = GetEnumFlags<ItemFlags>(template.ItemFlags),
             ItemWeight = template.ItemWeight,
             MaxDamage = template.MaxDamage,
             ModelId = template.ModelId,
-            MultiplierModifiers = BuildMultiplierModifiers(template),
             PrimaryBonus = primaryBonus?.ToString(),
             PrimarySkill = template.PrimarySkill.ToString(),
+            Proficiency = GetProficiency(template)?.ToString(),
             Rarity = template.RarityId.ToString(),
             RecipeId = recipeId,
             RequiredLevel = template.RequiredLevel,
             SkillEffectiveness = skillEffectiveness,
             RequirementOverrides = template.RequirementOverrides?.Select(ToRequirementOverride),
-            StatModifiers = BuildInstanceStatModifiers(item),
+            StatModifiers = BuildTemplateStatModifiers(template),
             UseAnimation = useAnimation?.ToString(),
             UseSeconds = useSeconds,
             UseRestrictions = template.UseRestrictions,
@@ -154,7 +156,6 @@ public static class ItemExtensions
 
         return new ItemPayload
         {
-            Id = (uint)itemData.ItemId,
             Item = new ItemBody
             {
                 Id = itemData.ItemId,
@@ -162,6 +163,111 @@ public static class ItemExtensions
             },
             Type = "item"
         };
+    }
+
+    // Identifies an item by its definition *and* its rolled stats, for deduplication.
+    //
+    // ItemId alone isn't enough any more: since uncommon+ items roll their own stats, two copies of the
+    // same ItemId can carry completely different stats and both are worth uploading. Keyed on the rolled
+    // values rather than the instance guid so that re-seeing the same physical item (or an identical roll
+    // on a different one) stays deduplicated — otherwise every relog would re-upload the whole inventory.
+    //
+    // Modifiers are sorted because the game gives no ordering guarantee; without it the same roll in a
+    // different array order would look like a new one.
+    public static string GetDedupeSignature(this Item item)
+    {
+        var itemId = item.Template.ItemId;
+
+        var stats = BuildInstanceStatModifiers(item)
+            .Select(s => $"{s.Stat}:{s.ModifierType}:{s.Amount.ToString("R", CultureInfo.InvariantCulture)}")
+            .OrderBy(s => s, StringComparer.Ordinal);
+
+        var multipliers = BuildMultiplierModifiers(item.Template)
+            .Select(m => $"{m.MultiplierType}:{m.ModifierType}:{m.BaneKind}:{m.BaneRace}:" +
+                         m.Amount.ToString("R", CultureInfo.InvariantCulture))
+            .OrderBy(m => m, StringComparer.Ordinal);
+
+        return $"{itemId}|{string.Join(",", stats)}|{string.Join(",", multipliers)}";
+    }
+
+    // Everything that varies between two copies of the same ItemId. The stat rolls come off the live Item;
+    // the multiplier modifiers come off the ItemTemplate, but that's instance data too — the client
+    // deserializes a fresh ItemTemplate per Item rather than sharing one per ItemId, so nothing on it is
+    // guaranteed to be common across copies.
+    private static ItemInstancePayload BuildInstance(Item item, ItemTemplate template)
+    {
+        var statModifiers = BuildInstanceStatModifiers(item);
+        var multiplierModifiers = BuildMultiplierModifiers(template);
+
+        return new ItemInstancePayload
+        {
+            InstanceGuid = item.ItemInstanceGuid.ToString(),
+            StatModifiers = statModifiers.Count == 0 ? null : statModifiers,
+            MultiplierModifiers = multiplierModifiers.Count == 0 ? null : multiplierModifiers
+        };
+    }
+
+    // Definition-level stats off the template, as opposed to the instance rolls. Always empty in practice
+    // (see the note on ItemInfoPayload.StatModifiers), but mapped rather than assumed so that a change
+    // server-side shows up as data instead of being silently dropped.
+    private static List<ItemInfoPayloadStatModifier>? BuildTemplateStatModifiers(ItemTemplate template)
+    {
+        var templateStatModifiers = template.StatModifiers;
+        if (templateStatModifiers == null || templateStatModifiers.Length == 0)
+        {
+            return null;
+        }
+
+        var result = new List<ItemInfoPayloadStatModifier>();
+        foreach (var statModifier in templateStatModifiers)
+        {
+            if (statModifier == null)
+            {
+                continue;
+            }
+
+            result.Add(new ItemInfoPayloadStatModifier
+            {
+                Stat = statModifier.Stat.ToString(),
+                ModifierType = statModifier.ModifierType.ToString(),
+                Amount = statModifier.Amount
+            });
+        }
+
+        return result.Count == 0 ? null : result;
+    }
+
+    // The equip proficiency shown in tooltips ("Requires Short Spears proficiency"). ItemTemplate.PrimarySkill
+    // looks like the obvious source but is always None on the client, so this goes through the game's own
+    // WeaponType/ArmorType -> SkillType mapping helpers instead. Shields carry a WeaponType (Buckler,
+    // SmallShield, LargeShield, TowerShield) so they take the weapon path; the armor path has to be gated on
+    // ItemTypeId because ArmorType has no None member (0 is HeavyPlate), so every non-armor item would
+    // otherwise look like heavy plate.
+    private static SkillType? GetProficiency(ItemTemplate template)
+    {
+        try
+        {
+            if (template.WeaponType != WeaponType.None)
+            {
+                var weaponProficiency = WeaponTypeExtensions.ToProficiencySkillType(template.WeaponType);
+
+                return weaponProficiency == SkillType.None ? null : weaponProficiency;
+            }
+
+            if (template.ItemTypeId == ItemType.Armor)
+            {
+                var armorProficiency = ArmorTypeExtensions.ToProficiencySkillType(template.GetArmorType());
+
+                return armorProficiency == SkillType.None ? null : armorProficiency;
+            }
+        }
+        catch (Exception)
+        {
+            // Same defensive stance as the nullable template reads above: a proficiency we can't resolve is
+            // better omitted than fatal to the whole item upload.
+        }
+
+        return null;
     }
 
     // Instance-rolled stat modifiers off a live Item. Item1 (StatType) can't be read directly due to an

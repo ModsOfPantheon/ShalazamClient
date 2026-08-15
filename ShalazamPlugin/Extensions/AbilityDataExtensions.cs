@@ -150,7 +150,6 @@ public static class AbilityDataExtensions
 
         return new AbilityPayload
         {
-            Id =  (uint)abilityData.Id,
             Type = "ability",
             Ability = new AbilityBody
             {
