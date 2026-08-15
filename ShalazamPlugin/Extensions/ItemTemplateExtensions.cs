@@ -126,6 +126,7 @@ public static class ItemExtensions
             ModelId = template.ModelId,
             PrimaryBonus = primaryBonus?.ToString(),
             PrimarySkill = template.PrimarySkill.ToString(),
+            Proficiency = GetProficiency(template)?.ToString(),
             Rarity = template.RarityId.ToString(),
             RecipeId = recipeId,
             RequiredLevel = template.RequiredLevel,
@@ -234,6 +235,39 @@ public static class ItemExtensions
         }
 
         return result.Count == 0 ? null : result;
+    }
+
+    // The equip proficiency shown in tooltips ("Requires Short Spears proficiency"). ItemTemplate.PrimarySkill
+    // looks like the obvious source but is always None on the client, so this goes through the game's own
+    // WeaponType/ArmorType -> SkillType mapping helpers instead. Shields carry a WeaponType (Buckler,
+    // SmallShield, LargeShield, TowerShield) so they take the weapon path; the armor path has to be gated on
+    // ItemTypeId because ArmorType has no None member (0 is HeavyPlate), so every non-armor item would
+    // otherwise look like heavy plate.
+    private static SkillType? GetProficiency(ItemTemplate template)
+    {
+        try
+        {
+            if (template.WeaponType != WeaponType.None)
+            {
+                var weaponProficiency = WeaponTypeExtensions.ToProficiencySkillType(template.WeaponType);
+
+                return weaponProficiency == SkillType.None ? null : weaponProficiency;
+            }
+
+            if (template.ItemTypeId == ItemType.Armor)
+            {
+                var armorProficiency = ArmorTypeExtensions.ToProficiencySkillType(template.GetArmorType());
+
+                return armorProficiency == SkillType.None ? null : armorProficiency;
+            }
+        }
+        catch (Exception)
+        {
+            // Same defensive stance as the nullable template reads above: a proficiency we can't resolve is
+            // better omitted than fatal to the whole item upload.
+        }
+
+        return null;
     }
 
     // Instance-rolled stat modifiers off a live Item. Item1 (StatType) can't be read directly due to an
