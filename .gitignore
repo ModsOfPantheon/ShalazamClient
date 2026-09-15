@@ -39,3 +39,6 @@ global.json
 Directory.Build.props
 types*.html
 types*.json
+
+# Release zips staged by tools/package.ps1 (its default -OutputDir is <repo>/artifacts)
+artifacts/

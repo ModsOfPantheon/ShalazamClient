@@ -28,9 +28,29 @@ This plugin does not
 However, this plugin is to be used **at your own risk.** I do not accept any liability or reponsibility for any actions taken against your account for using this plugin.
 
 ## Setup
+
+First, the prerequisites:
 * Download and install the [.NET 6.0 runtime](https://dotnet.microsoft.com/en-us/download/dotnet/6.0). Choose the x64 version.
 * Download the latest [Melonloader](https://melonwiki.xyz/#/)
 * Run the installer, selecting Pantheon either from the list or by manually locating the game
+
+Then install the plugin. Close Pantheon first — the mod file is locked while the game runs.
+
+### Using the installer (recommended)
+* Download the latest release zip and extract all of it somewhere
+* Double-click `Install.cmd`
+
+It finds your Pantheon installations (Steam and standalone launcher, live and PTR), shows
+you exactly what it's going to change, and waits for you to confirm before touching
+anything. If you have more than one installation it can do them all at once. It also
+writes your API key into `MelonPreferences.cfg` for you.
+
+Running it again lets you update or uninstall. To remove the mod, choose option 2.
+
+If your game lives under `C:\Program Files`, right-click `Install.cmd` and choose
+*Run as administrator*.
+
+### By hand
 * Extract the folder from releases in to the game directory
 * In the UserData folder, edit `MelonPreferences.cfg` to contain your API key. A blank placeholder is present for you in the file.
 * Run the game as normal
